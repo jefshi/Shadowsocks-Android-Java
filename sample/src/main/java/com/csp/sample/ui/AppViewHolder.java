@@ -13,11 +13,12 @@ import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.csp.proxy.core.AppProxyManager;
 import com.csp.sample.App;
 import com.csp.sample.R;
 import com.csp.sample.proxy.BoostApp;
+import com.csp.sample.proxy.BoosterServer;
 import com.csp.utillib.AppUtil;
+import com.csp.utillib.DateUtils;
 
 
 class AppViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -27,7 +28,7 @@ class AppViewHolder extends RecyclerView.ViewHolder implements View.OnClickListe
     private Switch check = (Switch) itemView.findViewById(R.id.itemcheck);
 
     private BoostApp item;
-    private Boolean proxied = false;
+    private boolean boosted;
 
     AppViewHolder(View itemView) {
         super(itemView);
@@ -36,45 +37,57 @@ class AppViewHolder extends RecyclerView.ViewHolder implements View.OnClickListe
 
     void bind(BoostApp app) {
         this.item = app;
-        proxied = AppProxyManager.getInstance().isProxyApp(app);
+        boosted = BoosterServer.getInstance().isBoostApp(app);
         itemlable.setText(app.getAppLabel());
-        check.setChecked(proxied);
+        check.setChecked(boosted);
+
+        if (boosted) {
+            itemtime.setBase(DateUtils.getNowClock() - app.getBoostedTime());
+            itemtime.start();
+        }
 
         Drawable icon = item.getAppIcon();
         if (icon != null)
             itemicon.setImageDrawable(icon);
+        else
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Context context = App.getContext();
+                    PackageManager pm = context.getPackageManager();
+                    ResolveInfo resolveInfo = AppUtil.searchApplication(context, item.getPackageName());
+                    if (resolveInfo != null) {
+                        final Drawable icon = resolveInfo.loadIcon(pm);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Context context = App.getContext();
-                PackageManager pm = context.getPackageManager();
-                ResolveInfo resolveInfo = AppUtil.searchApplication(context, item.getPackageName());
-                if (resolveInfo != null) {
-                    final Drawable icon = resolveInfo.loadIcon(pm);
-
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            itemicon.setImageDrawable(icon);
-                        }
-                    });
-                    item.setAppIcon(icon);
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                itemicon.setImageDrawable(icon);
+                            }
+                        });
+                        item.setAppIcon(icon);
+                    }
                 }
-            }
-        }).start();
+            }).start();
     }
 
 
     @Override
     public void onClick(View view) {
-        if (proxied) {
-            AppProxyManager.getInstance().removeProxyApp(item);
-            check.setChecked(false);
+        boosted = !boosted;
+        if (boosted) {
+            BoosterServer.getInstance().addBoostApp(item);
         } else {
-            AppProxyManager.getInstance().addProxyApp(item);
-            check.setChecked(true);
+            BoosterServer.getInstance().removeBoostApp(item);
         }
-        proxied = !proxied;
+        check.setChecked(boosted);
+
+        if (boosted) {
+            itemtime.setBase(DateUtils.getNowClock() - item.getBoostedTime());
+            itemtime.start();
+        } else {
+            itemtime.setBase(DateUtils.getNowClock());
+            itemtime.stop();
+        }
     }
 }

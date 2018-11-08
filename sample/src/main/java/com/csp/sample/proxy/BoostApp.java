@@ -4,7 +4,6 @@ import android.graphics.drawable.Drawable;
 
 import com.csp.proxy.core.ProxyApp;
 
-
 /**
  * 代理应用
  * Created by chenshp on 2018/4/25.

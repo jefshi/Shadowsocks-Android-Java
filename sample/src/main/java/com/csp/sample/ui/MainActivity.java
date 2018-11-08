@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -27,12 +28,12 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.csp.proxy.core.ProxyApp;
-import com.csp.proxy.core.AppProxyManager;
 import com.csp.proxy.core.LocalVpnService;
-import com.csp.proxy.core.ProxyConfig;
+import com.csp.proxy.core.ProxyReceiver;
+import com.csp.proxy.core.ProxyState;
+import com.csp.sample.App;
 import com.csp.sample.R;
-import com.csp.sample.proxy.BoostApp;
+import com.csp.sample.proxy.BoosterServer;
 import com.csp.sample.proxy.Constant;
 import com.csp.sample.service.AppService;
 import com.csp.utillib.permissions.PermissionUtil;
@@ -44,7 +45,10 @@ import java.util.Calendar;
 public class MainActivity extends Activity implements
         View.OnClickListener,
         OnCheckedChangeListener,
-        LocalVpnService.onStatusChangedListener {
+        LocalVpnService.onStatusChangedListener,
+        ProxyReceiver {
+
+    private boolean isLollipopOrAbove = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
 
     private static String GL_HISTORY_LOGS;
 
@@ -71,6 +75,7 @@ public class MainActivity extends Activity implements
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
         };
         PermissionUtil.requestPermissions(this, permissions, 100);
+        BoosterServer.getInstance().registerReceiver(this);
 
         scrollViewLog = (ScrollView) findViewById(R.id.scrollViewLog);
         textViewLog = (TextView) findViewById(R.id.textViewLog);
@@ -92,13 +97,33 @@ public class MainActivity extends Activity implements
         LocalVpnService.addOnStatusChangedListener(this);
 
         //Pre-App Proxy
-        if (AppProxyManager.isLollipopOrAbove) {
-//            new AppProxyManager(this);
+        if (isLollipopOrAbove) {
             textViewProxyApp = (TextView) findViewById(R.id.textViewAppSelectDetail);
         } else {
             ((ViewGroup) findViewById(R.id.AppSelectLayout).getParent()).removeView(findViewById(R.id.AppSelectLayout));
             ((ViewGroup) findViewById(R.id.textViewAppSelectLine).getParent()).removeView(findViewById(R.id.textViewAppSelectLine));
         }
+    }
+
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        if (isLollipopOrAbove) {
+//            if (BoosterServer.getInstance().getProxyApps().size() != 0) {
+//                String tmpString = "";
+//                for (ProxyApp app : AppProxyManager.getInstance().getProxyApps()) {
+//                    tmpString += ((BoostApp) app).getAppLabel() + ", ";
+//                }
+//                textViewProxyApp.setText(tmpString);
+//            }
+//        }
+//    }
+
+    @Override
+    protected void onDestroy() {
+        LocalVpnService.removeOnStatusChangedListener(this);
+        BoosterServer.getInstance().unregisterReceiver(this);
+        super.onDestroy();
     }
 
     String readProxyUrl() {
@@ -245,8 +270,13 @@ public class MainActivity extends Activity implements
     }
 
     @Override
+    public void onStatusChanged(ProxyState state) {
+//        LogCat.e(state);
+    }
+
+    @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        if (LocalVpnService.IsRunning != isChecked) {
+        if (LocalVpnService.isRunning() != isChecked) {
             switchProxy.setEnabled(false);
             if (isChecked) {
                 Intent intent = LocalVpnService.prepare(this);
@@ -256,14 +286,14 @@ public class MainActivity extends Activity implements
                     startActivityForResult(intent, START_VPN_SERVICE_REQUEST_CODE);
                 }
             } else {
-                LocalVpnService.IsRunning = false;
+                LocalVpnService.setRunning(false);
             }
         }
     }
 
     private void startVPNService() {
-        String ProxyUrl = readProxyUrl();
-        if (!isValidUrl(ProxyUrl)) {
+        String proxyUrl = readProxyUrl();
+        if (!isValidUrl(proxyUrl)) {
             Toast.makeText(this, R.string.err_invalid_url, Toast.LENGTH_SHORT).show();
             switchProxy.post(new Runnable() {
                 @Override
@@ -278,7 +308,7 @@ public class MainActivity extends Activity implements
         textViewLog.setText("");
         GL_HISTORY_LOGS = null;
         onLogReceived("starting...");
-        LocalVpnService.ProxyUrl = ProxyUrl;
+        LocalVpnService.setProxyUrl(proxyUrl);
         startService(new Intent(this, LocalVpnService.class));
     }
 
@@ -324,7 +354,7 @@ public class MainActivity extends Activity implements
             return false;
         }
 
-        switchProxy.setChecked(LocalVpnService.IsRunning);
+        switchProxy.setChecked(LocalVpnService.isRunning());
         switchProxy.setOnCheckedChangeListener(this);
 
         return true;
@@ -348,7 +378,7 @@ public class MainActivity extends Activity implements
 
                 return true;
             case R.id.menu_item_exit:
-                if (!LocalVpnService.IsRunning) {
+                if (!LocalVpnService.isRunning()) {
                     finish();
                     return true;
                 }
@@ -359,7 +389,7 @@ public class MainActivity extends Activity implements
                         .setPositiveButton(R.string.btn_ok, new OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                LocalVpnService.IsRunning = false;
+                                LocalVpnService.setRunning(false);
                                 LocalVpnService.Instance.disconnectVPN();
                                 stopService(new Intent(MainActivity.this, LocalVpnService.class));
                                 System.runFinalization();
@@ -371,8 +401,9 @@ public class MainActivity extends Activity implements
 
                 return true;
             case R.id.menu_item_toggle_global:
-                ProxyConfig.Instance.globalMode = !ProxyConfig.Instance.globalMode;
-                if (ProxyConfig.Instance.globalMode) {
+                App.getProxyManager().switchGlobalMode();
+//                ProxyConfig.Instance.globalMode = !ProxyConfig.Instance.globalMode;
+                if (App.getProxyManager().isGlobalMode()) {
                     onLogReceived("Proxy global mode is on");
                 } else {
                     onLogReceived("Proxy global mode is off");
@@ -381,25 +412,4 @@ public class MainActivity extends Activity implements
                 return super.onOptionsItemSelected(item);
         }
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (AppProxyManager.isLollipopOrAbove) {
-            if (AppProxyManager.getInstance().getProxyApps().size() != 0) {
-                String tmpString = "";
-                for (ProxyApp app : AppProxyManager.getInstance().getProxyApps()) {
-                    tmpString += ((BoostApp) app).getAppLabel() + ", ";
-                }
-                textViewProxyApp.setText(tmpString);
-            }
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        LocalVpnService.removeOnStatusChangedListener(this);
-        super.onDestroy();
-    }
-
 }

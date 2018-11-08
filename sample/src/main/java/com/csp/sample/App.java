@@ -3,6 +3,8 @@ package com.csp.sample;
 import android.app.Application;
 import android.content.Context;
 
+import com.csp.proxy.core.ProxyManager;
+import com.csp.proxy.core.ProxyServer;
 import com.csp.sample.proxy.BoostApp;
 import com.csp.sample.proxy.BoosterServer;
 
@@ -16,14 +18,19 @@ import java.util.List;
 
 public class App extends Application {
     private static Context sContext;
-    private static List<BoostApp> mBoostApps;
+    private static List<BoostApp> sBoostApps;
+    private static ProxyManager sProxyManager;
 
     public static Context getContext() {
         return sContext;
     }
 
-    public static List<BoostApp> getmBoostApps() {
-        return mBoostApps;
+    public static List<BoostApp> getBoostApps() {
+        return sBoostApps;
+    }
+
+    public static ProxyManager getProxyManager() {
+        return sProxyManager;
     }
 
     @Override
@@ -31,7 +38,9 @@ public class App extends Application {
         super.onCreate();
 
         sContext = getApplicationContext();
-        mBoostApps = new ArrayList<>();
+        sBoostApps = new ArrayList<>();
         BoosterServer.getInstance();
+
+        sProxyManager = ProxyServer.getProxyManager(App.getContext());
     }
 }

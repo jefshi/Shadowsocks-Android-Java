@@ -22,18 +22,18 @@ class AppManagerAdapter extends RecyclerView.Adapter<AppViewHolder> implements S
 
     @Override
     public void onBindViewHolder(AppViewHolder holder, int position) {
-        BoostApp appInfo = App.getmBoostApps().get(position);
+        BoostApp appInfo = App.getBoostApps().get(position);
         holder.bind(appInfo);
     }
 
     @Override
     public int getItemCount() {
-        return App.getmBoostApps().size();
+        return App.getBoostApps().size();
     }
 
     @Override
     public String getSectionTitle(int position) {
-        BoostApp appInfo = App.getmBoostApps().get(position);
+        BoostApp appInfo = App.getBoostApps().get(position);
         return appInfo.getAppLabel();
     }
 }

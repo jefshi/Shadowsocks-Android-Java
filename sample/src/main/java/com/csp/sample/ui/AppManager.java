@@ -124,7 +124,7 @@ public class AppManager extends Activity {
 
 //        if (AppProxyManager.Instance.mlistAppInfo != null) {
 //            AppProxyManager.Instance.mlistAppInfo.clear();
-        App.getmBoostApps().clear();
+        App.getBoostApps().clear();
         for (PackageInfo packageInfo : packageInfos) {
             String pkgName = packageInfo.packageName; // reInfo.activityInfo.packageName; // 获得应用程序的包名
             String appLabel = packageInfo.applicationInfo.loadLabel(pManager).toString(); // String) reInfo.loadLabel(pm); // 获得应用程序的Label
@@ -134,7 +134,7 @@ public class AppManager extends Activity {
             appInfo.setPackageName(pkgName);
             // appInfo.setAppIcon(icon);
             if (!appInfo.getPackageName().equals(getPackageName()))//App本身会强制加入代理列表
-                App.getmBoostApps().add(appInfo);
+                App.getBoostApps().add(appInfo);
 //        }
         }
     }
