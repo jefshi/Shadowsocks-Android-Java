@@ -1,5 +1,6 @@
 package com.csp.sample.ui;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -26,11 +27,15 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.csp.proxy.core.AppInfo;
+import com.csp.proxy.ProxyApp;
 import com.csp.proxy.core.AppProxyManager;
 import com.csp.proxy.core.LocalVpnService;
 import com.csp.proxy.core.ProxyConfig;
 import com.csp.sample.R;
+import com.csp.sample.proxy.BoostApp;
+import com.csp.sample.proxy.Constant;
+import com.csp.sample.service.AppService;
+import com.csp.utillib.permissions.PermissionUtil;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -56,9 +61,16 @@ public class MainActivity extends Activity implements
     private Calendar mCalendar;
 
     @Override
+    @SuppressLint("WrongViewCast")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        AppService.start(this);
+        String[] permissions = new String[]{
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        };
+        PermissionUtil.requestPermissions(this, permissions, 100);
 
         scrollViewLog = (ScrollView) findViewById(R.id.scrollViewLog);
         textViewLog = (TextView) findViewById(R.id.textViewLog);
@@ -81,7 +93,7 @@ public class MainActivity extends Activity implements
 
         //Pre-App Proxy
         if (AppProxyManager.isLollipopOrAbove) {
-            new AppProxyManager(this);
+//            new AppProxyManager(this);
             textViewProxyApp = (TextView) findViewById(R.id.textViewAppSelectDetail);
         } else {
             ((ViewGroup) findViewById(R.id.AppSelectLayout).getParent()).removeView(findViewById(R.id.AppSelectLayout));
@@ -90,13 +102,9 @@ public class MainActivity extends Activity implements
     }
 
     String readProxyUrl() {
-        SharedPreferences preferences = getSharedPreferences("shadowsocksProxyUrl", MODE_PRIVATE);
-        String proxyUrl = preferences.getString(CONFIG_URL_KEY, "");
-
-        if (proxyUrl.isEmpty())
-            proxyUrl = "ss://aes-256-cfb:cylj2018@148.153.44.2:8342";
-
-        return proxyUrl;
+        return Constant.URL;
+//        SharedPreferences preferences = getSharedPreferences("shadowsocksProxyUrl", MODE_PRIVATE);
+//        return preferences.getString(CONFIG_URL_KEY, "");
     }
 
     void setProxyUrl(String ProxyUrl) {
@@ -378,10 +386,10 @@ public class MainActivity extends Activity implements
     protected void onResume() {
         super.onResume();
         if (AppProxyManager.isLollipopOrAbove) {
-            if (AppProxyManager.Instance.proxyAppInfo.size() != 0) {
+            if (AppProxyManager.getInstance().getProxyApps().size() != 0) {
                 String tmpString = "";
-                for (AppInfo app : AppProxyManager.Instance.proxyAppInfo) {
-                    tmpString += app.getAppLabel() + ", ";
+                for (ProxyApp app : AppProxyManager.getInstance().getProxyApps()) {
+                    tmpString += ((BoostApp) app).getAppLabel() + ", ";
                 }
                 textViewProxyApp.setText(tmpString);
             }
