@@ -2,6 +2,7 @@ package com.csp.proxy.core;
 
 import android.util.SparseArray;
 
+import com.csp.proxy.ProxyConstants;
 import com.csp.proxy.dns.DnsPacket;
 import com.csp.proxy.dns.Question;
 import com.csp.proxy.dns.Resource;
@@ -122,7 +123,7 @@ public class DnsProxy implements Runnable {
         rPointer.setDomain((short) 0xC00C);
         rPointer.setType(question.Type);
         rPointer.setClass(question.Class);
-        rPointer.setTTL(ProxyConfig.Instance.getDnsTTL());
+        rPointer.setTTL(ProxyConfig.getInstance().getDnsTTL());
         rPointer.setDataLength((short) 4);
         rPointer.setIP(newIP);
 
@@ -149,10 +150,10 @@ public class DnsProxy implements Runnable {
             Question question = dnsPacket.Questions[0];
             if (question.Type == 1) {
                 int realIP = getFirstIP(dnsPacket);
-                if (ProxyConfig.Instance.needProxy(question.Domain, realIP)) {
+                if (ProxyConfig.getInstance().needProxy(question.Domain, realIP)) {
                     int fakeIP = getOrCreateFakeIP(question.Domain);
                     tamperDnsResponse(rawPacket, dnsPacket, fakeIP);
-                    if (ProxyConfig.IS_DEBUG)
+                    if (ProxyConstants.LOG_DEBUG)
                         System.out.printf("FakeDns: %s=>%s(%s)\n", question.Domain, CommonMethods.ipIntToString(realIP), CommonMethods.ipIntToString(fakeIP));
                     return true;
                 }
@@ -200,11 +201,11 @@ public class DnsProxy implements Runnable {
         Question question = dnsPacket.Questions[0];
         System.out.println("DNS Qeury " + question.Domain);
         if (question.Type == 1) {
-            if (ProxyConfig.Instance.needProxy(question.Domain, getIPFromCache(question.Domain))) {
+            if (ProxyConfig.getInstance().needProxy(question.Domain, getIPFromCache(question.Domain))) {
                 int fakeIP = getOrCreateFakeIP(question.Domain);
                 tamperDnsResponse(ipHeader.m_Data, dnsPacket, fakeIP);
 
-                if (ProxyConfig.IS_DEBUG)
+                if (ProxyConstants.LOG_DEBUG)
                     System.out.printf("interceptDns FakeDns: %s=>%s\n", question.Domain, CommonMethods.ipIntToString(fakeIP));
 
                 int sourceIP = ipHeader.getSourceIP();

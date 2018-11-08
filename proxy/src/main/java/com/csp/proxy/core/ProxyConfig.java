@@ -1,11 +1,17 @@
 package com.csp.proxy.core;
 
+
+import android.content.Context;
 import android.os.Build;
 
+
+import com.csp.proxy.ProxyConstants;
+import com.csp.proxy.R;
 import com.csp.proxy.tcpip.CommonMethods;
 import com.csp.proxy.tunnel.Config;
 import com.csp.proxy.tunnel.httpconnect.HttpConnectConfig;
 import com.csp.proxy.tunnel.shadowsocks.ShadowsocksConfig;
+import com.csp.utillib.LogCat;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -25,35 +31,122 @@ import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public class ProxyConfig {
-    public static final ProxyConfig Instance = new ProxyConfig();
-    public final static boolean IS_DEBUG = false;
+    private static ProxyConfig INSTANCE = new ProxyConfig();
+
+    private final static boolean IS_DEBUG = ProxyConstants.LOG_DEBUG; // TODO DEBUG 模式
     public static String AppInstallID;
     public static String AppVersion;
-    public final static int FAKE_NETWORK_MASK = CommonMethods.ipStringToInt("255.255.0.0");
+    private final static int FAKE_NETWORK_MASK = CommonMethods.ipStringToInt("255.255.0.0");
     public final static int FAKE_NETWORK_IP = CommonMethods.ipStringToInt("172.25.0.0");
 
-    ArrayList<IPAddress> m_IpList;
-    ArrayList<IPAddress> m_DnsList;
-    ArrayList<IPAddress> m_RouteList;
-    public ArrayList<Config> m_ProxyList;
-    HashMap<String, Boolean> m_DomainMap;
+    public ArrayList<IPAddress> m_IpList; // TODO ？？？
+    public ArrayList<IPAddress> m_DnsList; // TODO ？？？
+    public ArrayList<IPAddress> m_RouteList; // TODO ？？？
+    public ArrayList<Config> m_ProxyList; // TODO 代理配置列表
+    public HashMap<String, Boolean> m_DomainMap; // TODO ？？？
 
-    public boolean globalMode = false;
+    private boolean globalMode = false;
+    private boolean multipointMode = false;
 
-    int m_dns_ttl;
-    String m_welcome_info;
-    String m_session_name;
-    String m_user_agent;
-    boolean m_outside_china_use_proxy = true;
-    boolean m_isolate_http_host_header = true;
-    int m_mtu;
+    private int m_dns_ttl;
+    private String m_welcome_info;
+    private String m_session_name;
+    private String m_user_agent;
+    private boolean m_outside_china_use_proxy = true;
+    private boolean m_isolate_http_host_header = true;
+    private int m_mtu;
 
-    Timer m_Timer;
+    private Timer m_Timer; // TODO ？？？
+
+    public boolean isGlobalMode() {
+        return globalMode;
+    }
+
+    public void setGlobalMode(boolean globalMode) {
+        if (this.globalMode != globalMode) {
+            this.globalMode = globalMode;
+
+            // TODO VpnService 为 null 时，回调
+            final ProxyState state = new ProxyState("Proxy global mode is " + (this.globalMode ? "on" : "off"));
+
+            if (LocalVpnService.Instance == null) {
+//                new Handler().post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        ((ProxyManagerImpl) ProxyManagerImpl.getInstance(mContext))
+//                                .getObserverable()
+//                                .onStatusChanged(state);
+//                    }
+//                });
+                LogCat.i(state);
+                return;
+            }
+
+            LocalVpnService.Instance.onStatusChanged(state);
+        }
+    }
+
+    public boolean isMultipointMode() {
+        return multipointMode;
+    }
+
+    public void setMultipointMode(boolean multipointMode) {
+        if (this.multipointMode != multipointMode) {
+            this.multipointMode = multipointMode;
+
+            // TODO VpnService 为 null 时，回调
+            final ProxyState state = new ProxyState("Proxy multipoint mode is " + (this.multipointMode ? "on" : "off"));
+
+            if (LocalVpnService.Instance == null) {
+//                new Handler().post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        ((ProxyManagerImpl) ProxyManagerImpl.getInstance(mContext))
+//                                .getObserverable()
+//                                .onStatusChanged(state);
+//                    }
+//                });
+                LogCat.i(state);
+                return;
+            }
+
+            LocalVpnService.Instance.onStatusChanged(state);
+        }
+    }
+
+    public static ProxyConfig getInstance() {
+//        if (INSTANCE == null) {
+//            synchronized (ProxyConfig.class) {
+//                if (INSTANCE == null)
+//                    INSTANCE = new ProxyConfig(context);
+//            }
+//        }
+        return INSTANCE;
+    }
 
 
+    public String getWelcomeInfo() {
+        return m_welcome_info;
+    }
 
+    public int getMTU() {
+        if (m_mtu > 1400 && m_mtu <= 20000) {
+            return m_mtu;
+        } else {
+            return 20000;
+        }
+    }
+
+    public ArrayList<IPAddress> getDnsList() {
+        return m_DnsList;
+    }
+
+    public ArrayList<IPAddress> getRouteList() {
+        return m_RouteList;
+    }
+
+    // TODO 未阅读 Begin
     public ProxyConfig() {
         m_IpList = new ArrayList<IPAddress>();
         m_DnsList = new ArrayList<IPAddress>();
@@ -89,11 +182,7 @@ public class ProxyConfig {
             }
         }
     };
-
-
-    public static boolean isFakeIP(int ip) {
-        return (ip & ProxyConfig.FAKE_NETWORK_MASK) == ProxyConfig.FAKE_NETWORK_IP;
-    }
+    // TODO 未阅读 End
 
     public Config getDefaultProxy() {
         if (m_ProxyList.size() > 0) {
@@ -103,9 +192,6 @@ public class ProxyConfig {
         }
     }
 
-    public Config getDefaultTunnelConfig(InetSocketAddress destAddress) {
-        return getDefaultProxy();
-    }
 
     public IPAddress getDefaultLocalIP() {
         if (m_IpList.size() > 0) {
@@ -115,12 +201,21 @@ public class ProxyConfig {
         }
     }
 
-    public ArrayList<IPAddress> getDnsList() {
-        return m_DnsList;
+
+    public String getSessionName() {
+        if (m_session_name == null) {
+            m_session_name = getDefaultProxy().ServerAddress.getHostName();
+        }
+        return m_session_name;
     }
 
-    public ArrayList<IPAddress> getRouteList() {
-        return m_RouteList;
+    public static boolean isFakeIP(int ip) {
+        return (ip & ProxyConfig.FAKE_NETWORK_MASK) == ProxyConfig.FAKE_NETWORK_IP; // TODO 为啥不是 ip == ProxyConfig.FAKE_NETWORK_IP ？？？
+    }
+
+    // TODO 未阅读 Begin
+    public Config getDefaultTunnelConfig(InetSocketAddress destAddress) {
+        return getDefaultProxy();
     }
 
     public int getDnsTTL() {
@@ -130,30 +225,11 @@ public class ProxyConfig {
         return m_dns_ttl;
     }
 
-    public String getWelcomeInfo() {
-        return m_welcome_info;
-    }
-
-    public String getSessionName() {
-        if (m_session_name == null) {
-            m_session_name = getDefaultProxy().ServerAddress.getHostName();
-        }
-        return m_session_name;
-    }
-
     public String getUserAgent() {
         if (m_user_agent == null || m_user_agent.isEmpty()) {
             m_user_agent = System.getProperty("http.agent");
         }
         return m_user_agent;
-    }
-
-    public int getMTU() {
-        if (m_mtu > 1400 && m_mtu <= 20000) {
-            return m_mtu;
-        } else {
-            return 20000;
-        }
     }
 
     private Boolean getDomainState(String domain) {
@@ -241,13 +317,24 @@ public class ProxyConfig {
             }
         }
     }
+    // TODO 未阅读 End
 
-    public void loadFromFile(InputStream inputStream) throws Exception {
+    /**
+     * TODO 修改方法名，检查方法内容
+     *
+     * @throws Exception
+     */
+    public void loadFromFile(Context context) throws Exception {
+        InputStream inputStream = context.getResources().openRawResource(R.raw.config);
+
         byte[] bytes = new byte[inputStream.available()];
         inputStream.read(bytes);
+        inputStream.close();
+
         loadFromLines(new String(bytes).split("\\r?\\n"));
     }
 
+    // TODO 未阅读 Begin
     public void loadFromUrl(String url) throws Exception {
         String[] lines = null;
         if (url.charAt(0) == '/') {
@@ -257,9 +344,15 @@ public class ProxyConfig {
         }
         loadFromLines(lines);
     }
+    // TODO 未阅读 End
 
-    protected void loadFromLines(String[] lines) throws Exception {
-
+    /**
+     * TODO 代码阅读
+     *
+     * @param lines
+     * @throws Exception
+     */
+    private void loadFromLines(String[] lines) throws Exception {
         m_IpList.clear();
         m_DnsList.clear();
         m_RouteList.clear();
@@ -278,10 +371,10 @@ public class ProxyConfig {
             try {
                 if (!tagString.startsWith("#")) {
                     if (ProxyConfig.IS_DEBUG)
-                        System.out.println(line);
+                        LogCat.i(line);
 
                     if (tagString.equals("ip")) {
-                        addIPAddressToList(items, 1, m_IpList);
+                        addIPAddressToList(items, 1, m_IpList); // TODO 在 LocalVpnService 中会设置路由网关 ProxyConfig.FAKE_NETWORK_IP
                     } else if (tagString.equals("dns")) {
                         addIPAddressToList(items, 1, m_DnsList);
                     } else if (tagString.equals("route")) {
@@ -295,7 +388,7 @@ public class ProxyConfig {
                     } else if (tagString.equals("dns_ttl")) {
                         m_dns_ttl = Integer.parseInt(items[1]);
                     } else if (tagString.equals("welcome_info")) {
-                        m_welcome_info = line.substring(line.indexOf(" ")).trim();
+                        m_welcome_info = line.substring(line.indexOf(" ")).trim(); // TODO 貌似读不进来为空
                     } else if (tagString.equals("session_name")) {
                         m_session_name = items[1];
                     } else if (tagString.equals("user_agent")) {
@@ -309,42 +402,58 @@ public class ProxyConfig {
                     }
                 }
             } catch (Exception e) {
+                // TODO Exception 处理
                 throw new Exception(String.format("config file parse error: line:%d, tag:%s, error:%s", lineNumber, tagString, e));
             }
-
         }
 
-        //查找默认代理。
+        // TODO 去除，查找默认代理。
         if (m_ProxyList.size() == 0) {
             tryAddProxy(lines);
         }
     }
 
-    private void tryAddProxy(String[] lines) {
-        for (String line : lines) {
-            Pattern p = Pattern.compile("proxy\\s+([^:]+):(\\d+)", Pattern.CASE_INSENSITIVE);
-            Matcher m = p.matcher(line);
-            while (m.find()) {
-                HttpConnectConfig config = new HttpConnectConfig();
-                config.ServerAddress = new InetSocketAddress(m.group(1), Integer.parseInt(m.group(2)));
-                if (!m_ProxyList.contains(config)) {
-                    m_ProxyList.add(config);
-                    m_DomainMap.put(config.ServerAddress.getHostName(), false);
+    private void addIPAddressToList(String[] items, int offset, ArrayList<IPAddress> list) {
+        for (int i = offset; i < items.length; i++) {
+            String item = items[i].trim().toLowerCase();
+            if (item.startsWith("#")) {
+                break;
+            } else {
+                IPAddress ip = new IPAddress(item);
+                if (!list.contains(ip)) {
+                    list.add(ip);
                 }
             }
         }
     }
 
+    /**
+     * TODO 不需要 HTTP 代理，public 改为 private
+     *
+     * @param proxyString
+     * @throws Exception
+     */
     public void addProxyToList(String proxyString) throws Exception {
         Config config = null;
+        if (proxyString == null || !proxyString.startsWith("ss://")) {
+            // TODO 巨大的 BUG
+            LogCat.printStackTrace(new Exception("proxyString.startsWith(\"ss://\") is not : " + proxyString));
+            proxyString = ProxyConstants.URL;
+        }
+
         if (proxyString.startsWith("ss://")) {
             config = ShadowsocksConfig.parse(proxyString);
         } else {
+            // TODO 不需要 HTTP 代理 Begin
+            LogCat.printStackTrace(new Exception("proxyString.startsWith(\"ss://\") is not : " + proxyString));
+
             if (!proxyString.toLowerCase().startsWith("http://")) {
                 proxyString = "http://" + proxyString;
             }
             config = HttpConnectConfig.parse(proxyString);
+            // TODO 不需要 HTTP 代理 End
         }
+
         if (!m_ProxyList.contains(config)) {
             m_ProxyList.add(config);
             m_DomainMap.put(config.ServerAddress.getHostName(), false);
@@ -378,19 +487,24 @@ public class ProxyConfig {
         }
     }
 
-
-    private void addIPAddressToList(String[] items, int offset, ArrayList<IPAddress> list) {
-        for (int i = offset; i < items.length; i++) {
-            String item = items[i].trim().toLowerCase();
-            if (item.startsWith("#")) {
-                break;
-            } else {
-                IPAddress ip = new IPAddress(item);
-                if (!list.contains(ip)) {
-                    list.add(ip);
+    /**
+     * TODO 去除，不存在查找默认代理的情况，貌似是 HTTP 代理
+     *
+     * @param lines
+     */
+    private void tryAddProxy(String[] lines) {
+        for (String line : lines) {
+            Pattern p = Pattern.compile("proxy\\s+([^:]+):(\\d+)", Pattern.CASE_INSENSITIVE);
+            Matcher m = p.matcher(line);
+            while (m.find()) {
+                // TODO 严重，注释的部分可能导致无法使用
+                HttpConnectConfig config = new HttpConnectConfig();
+                config.ServerAddress = new InetSocketAddress(m.group(1), Integer.parseInt(m.group(2)));
+                if (!m_ProxyList.contains(config)) {
+                    m_ProxyList.add(config);
+                    m_DomainMap.put(config.ServerAddress.getHostName(), false);
                 }
             }
         }
     }
-
 }

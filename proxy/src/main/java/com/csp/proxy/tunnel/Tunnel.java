@@ -2,8 +2,8 @@ package com.csp.proxy.tunnel;
 
 import android.annotation.SuppressLint;
 
+import com.csp.proxy.ProxyConstants;
 import com.csp.proxy.core.LocalVpnService;
-import com.csp.proxy.core.ProxyConfig;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -130,7 +130,7 @@ public abstract class Tunnel {
                     m_BrotherTunnel.beforeSend(buffer);//发送之前，先让子类处理，例如做加密等。
                     if (!m_BrotherTunnel.write(buffer, true)) {
                         key.cancel();//兄弟吃不消，就取消读取事件。
-                        if (ProxyConfig.IS_DEBUG)
+                        if (ProxyConstants.LOG_DEBUG)
                             System.out.printf("%s can not read more.\n", m_ServerEP);
                     }
                 }

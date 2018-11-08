@@ -5,6 +5,7 @@ import android.content.Intent;
 
 import com.csp.proxy.core.observer.ProxyObserverable;
 import com.csp.utillib.EmptyUtil;
+import com.csp.utillib.LogCat;
 
 import java.util.List;
 
@@ -38,7 +39,7 @@ class ProxyManagerImpl implements ProxyManager {
     private ProxyManagerImpl(Context context) {
         this.mContext = context;
         appProxyManager = AppProxyManager.getInstance(); // TODO 不要单例
-//        proxyConfig = ProxyConfig.getInstance(); // TODO 不要单例
+        proxyConfig = ProxyConfig.getInstance(); // TODO 不要单例
 
         observerable = new ProxyObserverable();
     }
@@ -46,19 +47,19 @@ class ProxyManagerImpl implements ProxyManager {
     @Override
     public int isPrepareProxy() {
         int result = PREPARE_VALID;
-//        if (!isValidProxyUrl(LocalVpnService.getProxyUrl()))
-//            result |= PREPARE_PROXY_URL_INVALID;
-//
-//        if (LocalVpnService.prepare(mContext) != null)
-//            result |= PREPARE_VPNSEVICE_INVALID;
+        if (!isValidProxyUrl(LocalVpnService.getProxyUrl()))
+            result |= PREPARE_PROXY_URL_INVALID;
+
+        if (LocalVpnService.prepare(mContext) != null)
+            result |= PREPARE_VPNSEVICE_INVALID;
 
         return result;
     }
 
     @Override
     public Intent prepare() {
-//        if (LocalVpnService.isRunning())
-//            throw new Error("Proxy running, can't restart!"); // TODO
+        if (LocalVpnService.isRunning())
+            throw new Error("Proxy running, can't restart!"); // TODO
 
         return LocalVpnService.prepare(mContext);
     }
@@ -74,8 +75,8 @@ class ProxyManagerImpl implements ProxyManager {
         if (!isValidProxyUrl(proxyUrl))
             throw new Exception("please sure proxy url is valid!");
 
-//        LocalVpnService.setProxyUrl(proxyUrl);
-        rebootProxy(false);
+        LocalVpnService.setProxyUrl(proxyUrl);
+//        rebootProxy(false);
     }
 
     @Override
@@ -91,7 +92,7 @@ class ProxyManagerImpl implements ProxyManager {
     @Override
     public void stopProxy() {
         if (LocalVpnService.Instance != null) {
-//            LocalVpnService.setRunning(false);
+            LocalVpnService.setRunning(false);
             LocalVpnService.Instance.disconnectVPN();
             mContext.stopService(new Intent(mContext, LocalVpnService.class));
         }
@@ -101,24 +102,27 @@ class ProxyManagerImpl implements ProxyManager {
 
     @Override
     public ProxyState getProxyState() {
-//        return LocalVpnService.sProxyState;
-        return null;
+        return LocalVpnService.sProxyState;
     }
 
     @Override
     public boolean isProxyRunning() {
-//        return LocalVpnService.isRunning();
-        return false;
+        return LocalVpnService.isRunning();
+    }
+
+    @Override
+    public boolean isGlobalMode() {
+        return proxyConfig.isGlobalMode();
     }
 
     @Override
     public void switchGlobalMode() {
-//        proxyConfig.setGlobalMode(!proxyConfig.isGlobalMode());
+        proxyConfig.setGlobalMode(!proxyConfig.isGlobalMode());
     }
 
     @Override
     public void switchMultipointMode() {
-//        proxyConfig.setMultipointMode(!proxyConfig.isMultipointMode());
+        proxyConfig.setMultipointMode(!proxyConfig.isMultipointMode());
     }
 
     @Override
@@ -155,8 +159,8 @@ class ProxyManagerImpl implements ProxyManager {
         appProxyManager.addProxyApp(app);
 //        if (LocalVpnService.isRunning())
 //            LocalVpnService.proxy_app_add = true;
-
-        rebootProxy(true);
+//
+//        rebootProxy(true);
         app.proxyStarted();
     }
 
@@ -186,18 +190,18 @@ class ProxyManagerImpl implements ProxyManager {
      * @param forceStart true: 服务未启动则直接启动
      */
     private void rebootProxy(boolean forceStart) {
-//        if (!LocalVpnService.isRunning()) {
-//            if (forceStart)
-//                startProxy();
-//            return;
-//        }
-//
-//        LocalVpnService.setRunning(false);
-//        try {
-//            Thread.sleep(120);
-//        } catch (InterruptedException e) {
-//            LogCat.printStackTrace(e);
-//        }
-//        startProxy();
+        if (!LocalVpnService.isRunning()) {
+            if (forceStart)
+                startProxy();
+            return;
+        }
+
+        LocalVpnService.setRunning(false);
+        try {
+            Thread.sleep(120);
+        } catch (InterruptedException e) {
+            LogCat.printStackTrace(e);
+        }
+        startProxy();
     }
 }

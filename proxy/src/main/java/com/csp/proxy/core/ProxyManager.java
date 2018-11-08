@@ -1,6 +1,9 @@
 package com.csp.proxy.core;
 
+import android.content.Context;
 import android.content.Intent;
+
+import com.csp.proxy.core.observer.Observerable;
 
 import java.util.List;
 
@@ -67,6 +70,13 @@ public interface ProxyManager {
      */
     @Deprecated
     boolean isProxyRunning();
+
+    /**
+     * 是否是全局模式
+     *
+     * @return true: 是
+     */
+    boolean isGlobalMode();
 
     /**
      * 切换全局模式，默认关闭

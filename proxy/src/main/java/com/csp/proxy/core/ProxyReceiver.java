@@ -1,7 +1,5 @@
 package com.csp.proxy.core;
 
-import com.csp.proxy.core.ProxyState;
-
 /**
  * 代理信息接收者接口(观察者)
  * Created by chenshp on 2018/4/10.

@@ -1,14 +1,12 @@
 package com.csp.proxy.core;
 
-import android.os.Build;
-
 import com.csp.utillib.EmptyUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AppProxyManager {
-    public static boolean isLollipopOrAbove = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP; // TODO 取消
+    // public static boolean isLollipopOrAbove = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP; // TODO 取消
 
     private static AppProxyManager instance; // TODO 取消
     private static final String PROXY_APPS = "PROXY_APPS";

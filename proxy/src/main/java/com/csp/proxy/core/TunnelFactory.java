@@ -20,7 +20,7 @@ public class TunnelFactory {
 
     public static Tunnel createTunnelByConfig(InetSocketAddress destAddress, Selector selector) throws Exception {
         if (destAddress.isUnresolved()) {
-            Config config = ProxyConfig.Instance.getDefaultTunnelConfig(destAddress);
+            Config config = ProxyConfig.getInstance().getDefaultTunnelConfig(destAddress);
             if (config instanceof HttpConnectConfig) {
                 return new HttpConnectTunnel((HttpConnectConfig) config, selector);
             } else if (config instanceof ShadowsocksConfig) {

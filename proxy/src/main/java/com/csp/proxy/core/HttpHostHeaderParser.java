@@ -1,5 +1,6 @@
 package com.csp.proxy.core;
 
+import com.csp.proxy.ProxyConstants;
 import com.csp.proxy.tcpip.CommonMethods;
 
 import java.util.Locale;
@@ -94,7 +95,7 @@ public class HttpHostHeaderParser {
                     length -= 5;//SNI size;
                     if (offset + length > limit) return null;
                     String serverName = new String(buffer, offset, length);
-                    if (ProxyConfig.IS_DEBUG)
+                    if (ProxyConstants.LOG_DEBUG)
                         System.out.printf("SNI: %s\n", serverName);
                     return serverName;
                 } else {
