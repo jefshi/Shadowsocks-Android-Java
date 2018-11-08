@@ -2,10 +2,10 @@ package com.csp.sample.proxy;
 
 import android.content.Intent;
 
-import com.csp.proxy.ProxyApp;
-import com.csp.proxy.ProxyManager;
-import com.csp.proxy.ProxyReceiver;
-import com.csp.proxy.ProxyServer;
+import com.csp.proxy.core.ProxyApp;
+import com.csp.proxy.core.ProxyManager;
+import com.csp.proxy.core.ProxyReceiver;
+import com.csp.proxy.core.ProxyServer;
 import com.csp.sample.App;
 import com.csp.utillib.LogCat;
 

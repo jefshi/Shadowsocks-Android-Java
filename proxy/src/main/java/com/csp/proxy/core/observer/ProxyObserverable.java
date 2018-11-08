@@ -1,7 +1,7 @@
 package com.csp.proxy.core.observer;
 
-import com.csp.proxy.ProxyReceiver;
-import com.csp.proxy.ProxyState;
+import com.csp.proxy.core.ProxyReceiver;
+import com.csp.proxy.core.ProxyState;
 
 import java.util.ArrayList;
 import java.util.List;

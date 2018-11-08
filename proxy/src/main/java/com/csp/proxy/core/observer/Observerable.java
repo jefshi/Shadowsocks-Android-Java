@@ -1,7 +1,7 @@
 package com.csp.proxy.core.observer;
 
-import com.csp.proxy.ProxyReceiver;
-import com.csp.proxy.ProxyState;
+import com.csp.proxy.core.ProxyReceiver;
+import com.csp.proxy.core.ProxyState;
 
 /**
  * 代理信息接口(被观察者)接口

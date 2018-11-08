@@ -4,7 +4,7 @@ package com.csp.proxy;
  * 代理常量
  * Created by chenshp on 2018/4/10.
  */
-interface ProxyConstants {
+public interface ProxyConstants {
     /**
      * 调试模式开关，发版请设置为 false
      * false：代码混淆压缩后，将日志信息清除

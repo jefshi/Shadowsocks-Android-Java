@@ -1,14 +1,10 @@
-package com.csp.proxy;
+package com.csp.proxy.core;
 
 import android.content.Context;
 import android.content.Intent;
 
-import com.csp.proxy.core.AppProxyManager;
-import com.csp.proxy.core.LocalVpnService;
-import com.csp.proxy.core.ProxyConfig;
 import com.csp.proxy.core.observer.ProxyObserverable;
 import com.csp.utillib.EmptyUtil;
-import com.csp.utillib.LogCat;
 
 import java.util.List;
 

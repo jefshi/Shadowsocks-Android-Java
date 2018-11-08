@@ -1,4 +1,4 @@
-package com.csp.proxy;
+package com.csp.proxy.core;
 
 import android.content.Context;
 

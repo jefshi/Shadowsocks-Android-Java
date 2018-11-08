@@ -10,7 +10,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 
-import com.csp.proxy.ProxyApp;
 import com.csp.proxy.R;
 import com.csp.utillib.LogCat;
 import com.csp.proxy.dns.DnsPacket;

@@ -2,7 +2,6 @@ package com.csp.proxy.core;
 
 import android.os.Build;
 
-import com.csp.proxy.ProxyApp;
 import com.csp.utillib.EmptyUtil;
 
 import java.util.ArrayList;

@@ -27,7 +27,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.csp.proxy.ProxyApp;
+import com.csp.proxy.core.ProxyApp;
 import com.csp.proxy.core.AppProxyManager;
 import com.csp.proxy.core.LocalVpnService;
 import com.csp.proxy.core.ProxyConfig;

@@ -2,7 +2,7 @@ package com.csp.sample.proxy;
 
 import android.graphics.drawable.Drawable;
 
-import com.csp.proxy.ProxyApp;
+import com.csp.proxy.core.ProxyApp;
 
 
 /**
