@@ -26,13 +26,13 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.csp.proxy.core.AppInfo;
-import com.csp.proxy.core.AppProxyManager;
-import com.csp.proxy.core.LocalVpnService;
-import com.csp.proxy.core.ProxyConfig;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.vm.shadowsocks.R;
+import com.vm.shadowsocks.core.AppInfo;
+import com.vm.shadowsocks.core.AppProxyManager;
+import com.vm.shadowsocks.core.LocalVpnService;
+import com.vm.shadowsocks.core.ProxyConfig;
 
 import java.util.Calendar;
 
@@ -80,7 +80,7 @@ public class MainActivity extends Activity implements
         LocalVpnService.addOnStatusChangedListener(this);
 
         //Pre-App Proxy
-        if (AppProxyManager.isLollipopOrAbove) {
+        if (AppProxyManager.isLollipopOrAbove){
             new AppProxyManager(this);
             textViewProxyApp = (TextView) findViewById(R.id.textViewAppSelectDetail);
         } else {
@@ -91,12 +91,7 @@ public class MainActivity extends Activity implements
 
     String readProxyUrl() {
         SharedPreferences preferences = getSharedPreferences("shadowsocksProxyUrl", MODE_PRIVATE);
-        String proxyUrl = preferences.getString(CONFIG_URL_KEY, "");
-
-        if (proxyUrl.isEmpty())
-            proxyUrl = "ss://aes-256-cfb:cylj2018@148.153.44.2:8342";
-
-        return proxyUrl;
+        return preferences.getString(CONFIG_URL_KEY, "");
     }
 
     void setProxyUrl(String ProxyUrl) {
@@ -147,7 +142,7 @@ public class MainActivity extends Activity implements
             return;
         }
 
-        if (v.getTag().toString().equals("ProxyUrl")) {
+        if (v.getTag().toString().equals("ProxyUrl")){
             new AlertDialog.Builder(this)
                     .setTitle(R.string.config_url)
                     .setItems(new CharSequence[]{
@@ -167,7 +162,7 @@ public class MainActivity extends Activity implements
                         }
                     })
                     .show();
-        } else if (v.getTag().toString().equals("AppSelect")) {
+        } else if (v.getTag().toString().equals("AppSelect")){
             System.out.println("abc");
             startActivity(new Intent(this, AppManager.class));
         }

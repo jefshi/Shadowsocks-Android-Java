@@ -19,11 +19,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Switch;
 
-import com.csp.proxy.core.AppInfo;
-import com.csp.proxy.core.AppProxyManager;
 import com.futuremind.recyclerviewfastscroll.FastScroller;
 import com.futuremind.recyclerviewfastscroll.SectionTitleProvider;
 import com.vm.shadowsocks.R;
+import com.vm.shadowsocks.core.AppInfo;
+import com.vm.shadowsocks.core.AppProxyManager;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,9 +32,9 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 
 /**
  * Created by so898 on 2017/5/3.
