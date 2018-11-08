@@ -3,8 +3,8 @@ package com.csp.proxy.core;
 import android.util.SparseArray;
 
 import com.csp.proxy.dns.DnsPacket;
-import com.csp.proxy.dns.Resource;
 import com.csp.proxy.dns.Question;
+import com.csp.proxy.dns.Resource;
 import com.csp.proxy.dns.ResourcePointer;
 import com.csp.proxy.tcpip.CommonMethods;
 import com.csp.proxy.tcpip.IPHeader;

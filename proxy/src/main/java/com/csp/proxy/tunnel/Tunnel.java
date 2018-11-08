@@ -2,8 +2,8 @@ package com.csp.proxy.tunnel;
 
 import android.annotation.SuppressLint;
 
-import com.csp.proxy.core.ProxyConfig;
 import com.csp.proxy.core.LocalVpnService;
+import com.csp.proxy.core.ProxyConfig;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

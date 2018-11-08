@@ -10,7 +10,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 
+import com.csp.proxy.ProxyApp;
 import com.csp.proxy.R;
+import com.csp.utillib.LogCat;
 import com.csp.proxy.dns.DnsPacket;
 import com.csp.proxy.tcpip.CommonMethods;
 import com.csp.proxy.tcpip.IPHeader;
@@ -340,20 +342,20 @@ public class LocalVpnService extends VpnService implements Runnable {
         if (ProxyConfig.IS_DEBUG)
             System.out.printf("setMtu: %d\n", ProxyConfig.Instance.getMTU());
 
-        ProxyConfig.IPAddress ipAddress = ProxyConfig.Instance.getDefaultLocalIP();
+        IPAddress ipAddress = ProxyConfig.Instance.getDefaultLocalIP();
         LOCAL_IP = CommonMethods.ipStringToInt(ipAddress.Address);
         builder.addAddress(ipAddress.Address, ipAddress.PrefixLength);
         if (ProxyConfig.IS_DEBUG)
             System.out.printf("addAddress: %s/%d\n", ipAddress.Address, ipAddress.PrefixLength);
 
-        for (ProxyConfig.IPAddress dns : ProxyConfig.Instance.getDnsList()) {
+        for (IPAddress dns : ProxyConfig.Instance.getDnsList()) {
             builder.addDnsServer(dns.Address);
             if (ProxyConfig.IS_DEBUG)
                 System.out.printf("addDnsServer: %s\n", dns.Address);
         }
 
         if (ProxyConfig.Instance.getRouteList().size() > 0) {
-            for (ProxyConfig.IPAddress routeAddress : ProxyConfig.Instance.getRouteList()) {
+            for (IPAddress routeAddress : ProxyConfig.Instance.getRouteList()) {
                 builder.addRoute(routeAddress.Address, routeAddress.PrefixLength);
                 if (ProxyConfig.IS_DEBUG)
                     System.out.printf("addRoute: %s/%d\n", routeAddress.Address, routeAddress.PrefixLength);
@@ -387,17 +389,17 @@ public class LocalVpnService extends VpnService implements Runnable {
         }
 
         if (AppProxyManager.isLollipopOrAbove){
-            if (AppProxyManager.Instance.proxyAppInfo.size() == 0){
+            if (AppProxyManager.getInstance().getProxyApps().size() == 0){
                 writeLog("Proxy All Apps");
             }
-            for (AppInfo app : AppProxyManager.Instance.proxyAppInfo){
+            for (ProxyApp app : AppProxyManager.getInstance().getProxyApps()){
                 builder.addAllowedApplication("com.vm.shadowsocks");//需要把自己加入代理，不然会无法进行网络连接
                 try{
-                    builder.addAllowedApplication(app.getPkgName());
-                    writeLog("Proxy App: " + app.getAppLabel());
+                    builder.addAllowedApplication(app.getPackageName());
+                    writeLog("Proxy App: " + app.getPackageName());
                 } catch (Exception e){
                     e.printStackTrace();
-                    writeLog("Proxy App Fail: " + app.getAppLabel());
+                    writeLog("Proxy App Fail: " + app.getPackageName());
                 }
             }
         } else {
@@ -452,6 +454,7 @@ public class LocalVpnService extends VpnService implements Runnable {
 
     @Override
     public void onDestroy() {
+        LogCat.e("VPNService(%s) destoried.");
         System.out.printf("VPNService(%s) destoried.\n", ID);
         if (m_VPNThread != null) {
             m_VPNThread.interrupt();

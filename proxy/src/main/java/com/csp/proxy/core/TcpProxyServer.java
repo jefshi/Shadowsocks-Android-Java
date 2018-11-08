@@ -1,7 +1,7 @@
 package com.csp.proxy.core;
 
-import com.csp.proxy.tunnel.Tunnel;
 import com.csp.proxy.tcpip.CommonMethods;
+import com.csp.proxy.tunnel.Tunnel;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
