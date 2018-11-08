@@ -1,6 +1,5 @@
 package com.csp.proxy.core;
 
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -11,13 +10,12 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 
+import com.csp.proxy.R;
 import com.csp.proxy.dns.DnsPacket;
-import com.csp.proxy.tcpip.IPHeader;
-import com.csp.proxy.tcpip.UDPHeader;
-import com.vm.shadowsocks.R;
 import com.csp.proxy.tcpip.CommonMethods;
+import com.csp.proxy.tcpip.IPHeader;
 import com.csp.proxy.tcpip.TCPHeader;
-import com.vm.shadowsocks.ui.MainActivity;
+import com.csp.proxy.tcpip.UDPHeader;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -406,9 +404,9 @@ public class LocalVpnService extends VpnService implements Runnable {
             writeLog("No Pre-App proxy, due to low Android version.");
         }
 
-        Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
-        builder.setConfigureIntent(pendingIntent);
+//        Intent intent = new Intent(this, MainActivity.class);
+//        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+//        builder.setConfigureIntent(pendingIntent);
 
         builder.setSession(ProxyConfig.Instance.getSessionName());
         ParcelFileDescriptor pfdDescriptor = builder.establish();
