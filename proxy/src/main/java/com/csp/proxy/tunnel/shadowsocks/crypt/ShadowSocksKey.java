@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.csp.proxy.tunnel.shadowsocks;
+package com.csp.proxy.tunnel.shadowsocks.crypt;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;

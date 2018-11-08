@@ -29,7 +29,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.csp.proxy.tunnel.shadowsocks;
+package com.csp.proxy.tunnel.shadowsocks.crypt;
+
+import com.csp.proxy.tunnel.shadowsocks.crypt.impl.AesCrypt;
+import com.csp.proxy.tunnel.shadowsocks.crypt.impl.BlowFishCrypt;
+import com.csp.proxy.tunnel.shadowsocks.crypt.impl.CamelliaCrypt;
+import com.csp.proxy.tunnel.shadowsocks.crypt.impl.Chacha20Crypt;
+import com.csp.proxy.tunnel.shadowsocks.crypt.base.ICrypt;
+import com.csp.proxy.tunnel.shadowsocks.crypt.impl.Rc4Md5Crypt;
+import com.csp.proxy.tunnel.shadowsocks.crypt.impl.SeedCrypt;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;

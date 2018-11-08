@@ -2,6 +2,8 @@ package com.csp.proxy.core;
 
 import com.csp.proxy.ProxyConstants;
 import com.csp.proxy.tcpip.CommonMethods;
+import com.csp.proxy.tcpip.NatSession;
+import com.csp.proxy.tcpip.NatSessionManager;
 import com.csp.proxy.tunnel.Tunnel;
 
 import java.io.IOException;

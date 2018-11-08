@@ -1,4 +1,6 @@
-package com.csp.proxy.tunnel.shadowsocks;
+package com.csp.proxy.tunnel.shadowsocks.crypt.impl;
+
+import com.csp.proxy.tunnel.shadowsocks.crypt.base.CryptBase;
 
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.StreamCipher;

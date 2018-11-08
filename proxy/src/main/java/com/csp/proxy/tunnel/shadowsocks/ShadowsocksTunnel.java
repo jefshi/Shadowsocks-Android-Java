@@ -1,6 +1,8 @@
 package com.csp.proxy.tunnel.shadowsocks;
 
 import com.csp.proxy.tunnel.Tunnel;
+import com.csp.proxy.tunnel.shadowsocks.crypt.CryptFactory;
+import com.csp.proxy.tunnel.shadowsocks.crypt.base.ICrypt;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;

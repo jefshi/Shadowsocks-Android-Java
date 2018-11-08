@@ -29,10 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.csp.proxy.tunnel.shadowsocks;
+package com.csp.proxy.tunnel.shadowsocks.crypt.impl;
+
+import com.csp.proxy.tunnel.shadowsocks.crypt.base.CryptBase;
 
 import org.bouncycastle.crypto.StreamBlockCipher;
-import org.bouncycastle.crypto.engines.BlowfishEngine;
+import org.bouncycastle.crypto.engines.CamelliaEngine;
 import org.bouncycastle.crypto.modes.CFBBlockCipher;
 
 import java.io.ByteArrayOutputStream;
@@ -44,34 +46,50 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Blow fish cipher implementation
+ * Camellia cipher implementation
  */
-public class BlowFishCrypt extends CryptBase {
+public class CamelliaCrypt extends CryptBase {
 
-    public final static String CIPHER_BLOWFISH_CFB = "bf-cfb";
+    public final static String CIPHER_CAMELLIA_128_CFB = "camellia-128-cfb";
+    public final static String CIPHER_CAMELLIA_192_CFB = "camellia-192-cfb";
+    public final static String CIPHER_CAMELLIA_256_CFB = "camellia-256-cfb";
 
     public static Map<String, String> getCiphers() {
         Map<String, String> ciphers = new HashMap<String, String>();
-        ciphers.put(CIPHER_BLOWFISH_CFB, BlowFishCrypt.class.getName());
+        ciphers.put(CIPHER_CAMELLIA_128_CFB, CamelliaCrypt.class.getName());
+        ciphers.put(CIPHER_CAMELLIA_192_CFB, CamelliaCrypt.class.getName());
+        ciphers.put(CIPHER_CAMELLIA_256_CFB, CamelliaCrypt.class.getName());
 
         return ciphers;
     }
 
-    public BlowFishCrypt(String name, String password) {
+    public CamelliaCrypt(String name, String password) {
         super(name, password);
     }
 
     @Override
     public int getKeyLength() {
-        return 16;
+        if (_name.equals(CIPHER_CAMELLIA_128_CFB)) {
+            return 16;
+        } else if (_name.equals(CIPHER_CAMELLIA_192_CFB)) {
+            return 24;
+        } else if (_name.equals(CIPHER_CAMELLIA_256_CFB)) {
+            return 32;
+        }
+
+        return 0;
     }
 
     @Override
     protected StreamBlockCipher getCipher(boolean isEncrypted) throws InvalidAlgorithmParameterException {
-        BlowfishEngine engine = new BlowfishEngine();
+        CamelliaEngine engine = new CamelliaEngine();
         StreamBlockCipher cipher;
 
-        if (_name.equals(CIPHER_BLOWFISH_CFB)) {
+        if (_name.equals(CIPHER_CAMELLIA_128_CFB)) {
+            cipher = new CFBBlockCipher(engine, getIVLength() * 8);
+        } else if (_name.equals(CIPHER_CAMELLIA_192_CFB)) {
+            cipher = new CFBBlockCipher(engine, getIVLength() * 8);
+        } else if (_name.equals(CIPHER_CAMELLIA_256_CFB)) {
             cipher = new CFBBlockCipher(engine, getIVLength() * 8);
         } else {
             throw new InvalidAlgorithmParameterException(_name);
@@ -82,7 +100,7 @@ public class BlowFishCrypt extends CryptBase {
 
     @Override
     public int getIVLength() {
-        return 8;
+        return 16;
     }
 
     @Override

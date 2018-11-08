@@ -29,7 +29,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.csp.proxy.tunnel.shadowsocks;
+package com.csp.proxy.tunnel.shadowsocks.crypt.impl;
+
+import com.csp.proxy.tunnel.shadowsocks.crypt.base.CryptBase;
 
 import org.bouncycastle.crypto.StreamBlockCipher;
 import org.bouncycastle.crypto.engines.SEEDEngine;

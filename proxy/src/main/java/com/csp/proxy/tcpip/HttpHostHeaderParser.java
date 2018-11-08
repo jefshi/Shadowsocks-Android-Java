@@ -1,7 +1,7 @@
-package com.csp.proxy.core;
+package com.csp.proxy.tcpip;
 
 import com.csp.proxy.ProxyConstants;
-import com.csp.proxy.tcpip.CommonMethods;
+import com.csp.proxy.core.LocalVpnService;
 
 import java.util.Locale;
 

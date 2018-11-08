@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.util.Base64;
 
 import com.csp.proxy.tunnel.Config;
+import com.csp.proxy.tunnel.shadowsocks.crypt.CryptFactory;
 
 import java.net.InetSocketAddress;
 

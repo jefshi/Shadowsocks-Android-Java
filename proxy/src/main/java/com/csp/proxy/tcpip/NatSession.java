@@ -1,4 +1,4 @@
-package com.csp.proxy.core;
+package com.csp.proxy.tcpip;
 
 public class NatSession {
     public int RemoteIP;

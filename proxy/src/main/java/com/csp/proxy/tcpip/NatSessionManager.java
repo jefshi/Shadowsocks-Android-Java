@@ -1,8 +1,9 @@
-package com.csp.proxy.core;
+package com.csp.proxy.tcpip;
 
 import android.util.SparseArray;
 
-import com.csp.proxy.tcpip.CommonMethods;
+import com.csp.proxy.core.DnsProxy;
+import com.csp.proxy.core.ProxyConfig;
 
 public class NatSessionManager {
 

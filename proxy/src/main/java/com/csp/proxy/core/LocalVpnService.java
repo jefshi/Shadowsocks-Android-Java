@@ -12,6 +12,9 @@ import android.os.ParcelFileDescriptor;
 
 import com.csp.proxy.ProxyConstants;
 import com.csp.proxy.R;
+import com.csp.proxy.tcpip.HttpHostHeaderParser;
+import com.csp.proxy.tcpip.NatSession;
+import com.csp.proxy.tcpip.NatSessionManager;
 import com.csp.utillib.LogCat;
 import com.csp.proxy.dns.DnsPacket;
 import com.csp.proxy.tcpip.CommonMethods;
