@@ -2,6 +2,8 @@ package com.csp.proxy.tcpip;
 
 import com.csp.proxy.ProxyConstants;
 import com.csp.proxy.core.LocalVpnService;
+import com.csp.proxy.core.ProxyState;
+import com.csp.utillib.LogCat;
 
 import java.util.Locale;
 
@@ -23,13 +25,13 @@ public class HttpHostHeaderParser {
                     return getSNI(buffer, offset, count);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            LocalVpnService.Instance.writeLog("Error: parseHost:%s", e);
+            LogCat.printStackTrace(e);
+            LocalVpnService.Instance.onStatusChanged(new ProxyState("Error: parseHost:%s", e));
         }
         return null;
     }
 
-    static String getHttpHost(byte[] buffer, int offset, int count) {
+    private static String getHttpHost(byte[] buffer, int offset, int count) {
         String headerString = new String(buffer, offset, count);
         String[] headerLines = headerString.split("\\r\\n");
         String requestLine = headerLines[0];
@@ -48,7 +50,7 @@ public class HttpHostHeaderParser {
         return null;
     }
 
-    static String getSNI(byte[] buffer, int offset, int count) {
+    private static String getSNI(byte[] buffer, int offset, int count) {
         int limit = offset + count;
         if (count > 43 && buffer[offset] == 0x16) {//TLS Client Hello
             offset += 43;//skip 43 bytes header

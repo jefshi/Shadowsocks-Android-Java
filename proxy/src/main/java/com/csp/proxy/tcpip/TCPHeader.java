@@ -20,8 +20,8 @@ public class TCPHeader {
     static final short offset_crc = 16; // 16位校验和
     static final short offset_urp = 18; // 16位紧急数据偏移量
 
-    public byte[] m_Data;
-    public int m_Offset;
+    public byte[] m_Data; // TODO ？？？好像仍然是 IP 数据报内容
+    public int m_Offset; // TODO ？？？好像是 IP数据报报 首部长度
 
     public TCPHeader(byte[] data, int offset) {
         this.m_Data = data;

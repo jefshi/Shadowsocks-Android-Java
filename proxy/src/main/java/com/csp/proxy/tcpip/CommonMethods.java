@@ -4,6 +4,9 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+/**
+ * TODO 修改类名，工具类，进行 IP 运算
+ */
 public class CommonMethods {
 
     public static InetAddress ipIntToInet4Address(int ip) {

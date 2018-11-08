@@ -23,7 +23,7 @@ public class NatSessionManager {
         return Sessions.size();
     }
 
-    static void clearExpiredSessions() {
+    private static void clearExpiredSessions() {
         long now = System.nanoTime();
         for (int i = Sessions.size() - 1; i >= 0; i--) {
             NatSession session = Sessions.valueAt(i);
@@ -33,6 +33,14 @@ public class NatSessionManager {
         }
     }
 
+    /**
+     * 添加 NAPT 地址映射
+     *
+     * @param portKey    源 Port
+     * @param remoteIP   目的 IP
+     * @param remotePort 目的 Port
+     * @return TODO (旧的) NAPT 地址映射
+     */
     public static NatSession createSession(int portKey, int remoteIP, short remotePort) {
         if (Sessions.size() > MAX_SESSION_COUNT) {
             clearExpiredSessions();//清理过期的会话。

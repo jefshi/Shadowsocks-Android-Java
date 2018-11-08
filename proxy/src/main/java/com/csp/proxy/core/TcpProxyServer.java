@@ -14,6 +14,9 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
+/**
+ * TODO 在 VPNService 启动时，创建并运行了线程 TcpProxyServer，类似于上述讲到的ss-local本地 Sock5 代理服务器。
+ */
 public class TcpProxyServer implements Runnable {
 
     public boolean Stopped;
@@ -21,7 +24,7 @@ public class TcpProxyServer implements Runnable {
 
     Selector m_Selector;
     ServerSocketChannel m_ServerSocketChannel;
-    Thread m_ServerThread;
+    Thread m_ServerThread; // TODO 可能有内存泄漏的问题
 
     public TcpProxyServer(int port) throws IOException {
         m_Selector = Selector.open();
@@ -122,12 +125,14 @@ public class TcpProxyServer implements Runnable {
                 localTunnel.setBrotherTunnel(remoteTunnel);//关联兄弟
                 remoteTunnel.connect(destAddress);//开始连接
             } else {
-                LocalVpnService.Instance.writeLog("Error: socket(%s:%d) target host is null.", localChannel.socket().getInetAddress().toString(), localChannel.socket().getPort());
+                LocalVpnService.Instance.onStatusChanged(
+                        new ProxyState("Error: socket(%s:%d) target host is null.", localChannel.socket().getInetAddress().toString(), localChannel.socket().getPort()));
                 localTunnel.dispose();
             }
         } catch (Exception e) {
             e.printStackTrace();
-            LocalVpnService.Instance.writeLog("Error: remote socket create failed: %s", e.toString());
+            LocalVpnService.Instance.onStatusChanged(
+                    new ProxyState("Error: remote socket create failed: %s", e));
             if (localTunnel != null) {
                 localTunnel.dispose();
             }

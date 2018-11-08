@@ -1,10 +1,9 @@
 package com.csp.proxy.core;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Handler;
@@ -12,15 +11,16 @@ import android.os.ParcelFileDescriptor;
 
 import com.csp.proxy.ProxyConstants;
 import com.csp.proxy.R;
-import com.csp.proxy.tcpip.HttpHostHeaderParser;
-import com.csp.proxy.tcpip.NatSession;
-import com.csp.proxy.tcpip.NatSessionManager;
-import com.csp.utillib.LogCat;
 import com.csp.proxy.dns.DnsPacket;
 import com.csp.proxy.tcpip.CommonMethods;
+import com.csp.proxy.tcpip.HttpHostHeaderParser;
 import com.csp.proxy.tcpip.IPHeader;
+import com.csp.proxy.tcpip.NatSession;
+import com.csp.proxy.tcpip.NatSessionManager;
 import com.csp.proxy.tcpip.TCPHeader;
 import com.csp.proxy.tcpip.UDPHeader;
+import com.csp.utillib.AppInfoUtils;
+import com.csp.utillib.LogCat;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -83,8 +83,16 @@ public class LocalVpnService extends VpnService implements Runnable {
         m_Packet = new byte[20000];
         m_IPHeader = new IPHeader(m_Packet, 0);
         m_TCPHeader = new TCPHeader(m_Packet, 20);
+
+        proxyManager = (ProxyManagerImpl) ProxyServer.getProxyManager(this);
+
+        // TODO 未阅读 Begin
         m_UDPHeader = new UDPHeader(m_Packet, 20);
         m_DNSBuffer = ((ByteBuffer) ByteBuffer.wrap(m_Packet).position(28)).slice();
+        // TODO 未阅读 End
+
+        sProxyState = ProxyState.STATE_DISCONNECTED;
+
         Instance = this;
 
         System.out.printf("New VPNService(%d)\n", ID);
@@ -97,6 +105,18 @@ public class LocalVpnService extends VpnService implements Runnable {
         m_VPNThread = new Thread(this, "VPNServiceThread");
         m_VPNThread.start();
         super.onCreate();
+    }
+
+    @Override
+    public void onDestroy() {
+        LogCat.e("VPNService(%s) destoried.");
+        System.out.printf("VPNService(%s) destoried.\n", ID);
+        if (m_VPNThread != null) {
+            m_VPNThread.interrupt();
+        }
+
+        onStatusChanged(ProxyState.STATE_DISCONNECTED);
+        AppProxyManager.getInstance().clearProxyApps();
     }
 
     @Override
@@ -134,9 +154,6 @@ public class LocalVpnService extends VpnService implements Runnable {
         });
     }
 
-    /**
-     * TODO 修改参数
-     */
     public void onStatusChanged(final ProxyState state) {
         if (state.getCode() != ProxyState.CODE_LOG) {
             sProxyState = state;
@@ -160,7 +177,7 @@ public class LocalVpnService extends VpnService implements Runnable {
             }
         });
     }
-
+    // TODO 未阅读 Begin
     public void sendUDPPacket(IPHeader ipHeader, UDPHeader udpHeader) {
         try {
             CommonMethods.ComputeUDPChecksum(ipHeader, udpHeader);
@@ -169,8 +186,10 @@ public class LocalVpnService extends VpnService implements Runnable {
             e.printStackTrace();
         }
     }
+    // TODO 未阅读 End
 
-    String getAppInstallID() {
+
+    private String getAppInstallID() {
         SharedPreferences preferences = getSharedPreferences("SmartProxy", MODE_PRIVATE);
         String appInstallID = preferences.getString("AppInstallID", null);
         if (appInstallID == null || appInstallID.isEmpty()) {
@@ -182,16 +201,21 @@ public class LocalVpnService extends VpnService implements Runnable {
         return appInstallID;
     }
 
-    String getVersionName() {
-        try {
-            PackageManager packageManager = getPackageManager();
-            // getPackageName()是你当前类的包名，0代表是获取版本信息
-            PackageInfo packInfo = packageManager.getPackageInfo(getPackageName(), 0);
-            String version = packInfo.versionName;
-            return version;
-        } catch (Exception e) {
-            return "0.0";
-        }
+//    String getVersionName() {
+//        try {
+//            PackageManager packageManager = getPackageManager();
+//            // getPackageName()是你当前类的包名，0代表是获取版本信息
+//            PackageInfo packInfo = packageManager.getPackageInfo(getPackageName(), 0);
+//            String version = packInfo.versionName;
+//            return version;
+//        } catch (Exception e) {
+//            return "0.0";
+//        }
+//    }
+
+    private String getVersionName() {
+        String versionName = AppInfoUtils.getVersionName(this);
+        return versionName == null ? "0.0" : versionName;
     }
 
     @Override
@@ -206,7 +230,7 @@ public class LocalVpnService extends VpnService implements Runnable {
             writeLog("App version: %s", ProxyConfig.AppVersion);
 
 
-            ChinaIpMaskManager.loadFromFile(getResources().openRawResource(R.raw.ipmask));//加载中国的IP段，用于IP分流。
+            ChinaIpMaskManager.loadFromFile(this);//加载中国的IP段，用于IP分流。
             waitUntilPreapred();//检查是否准备完毕。
 
             writeLog("Load config from file ...");
@@ -270,9 +294,18 @@ public class LocalVpnService extends VpnService implements Runnable {
         }
     }
 
+    /**
+     * TODO Proxy 部分核心处理 Begin
+     */
+
+    /**
+     * TODO 运行 VpnService 的核心
+     *
+     * @throws Exception
+     */
     private void runVPN() throws Exception {
-        this.m_VPNInterface = establishVPN();
-        this.m_VPNOutputStream = new FileOutputStream(m_VPNInterface.getFileDescriptor());
+        m_VPNInterface = establishVPN();
+        m_VPNOutputStream = new FileOutputStream(m_VPNInterface.getFileDescriptor());
         FileInputStream in = new FileInputStream(m_VPNInterface.getFileDescriptor());
         int size = 0;
         while (size != -1 && running) {
@@ -289,67 +322,75 @@ public class LocalVpnService extends VpnService implements Runnable {
         disconnectVPN();
     }
 
+    /**
+     * TODO IP 数据报接受处理，提取
+     */
     void onIPPacketReceived(IPHeader ipHeader, int size) throws IOException {
         switch (ipHeader.getProtocol()) {
             case IPHeader.TCP:
+                // 过滤非请求 IP 数据报
+                if (ipHeader.getSourceIP() != LOCAL_IP)
+                    break;
+
                 TCPHeader tcpHeader = m_TCPHeader;
                 tcpHeader.m_Offset = ipHeader.getHeaderLength();
-                if (ipHeader.getSourceIP() == LOCAL_IP) {
-                    if (tcpHeader.getSourcePort() == m_TcpProxyServer.Port) {// 收到本地TCP服务器数据
-                        NatSession session = NatSessionManager.getSession(tcpHeader.getDestinationPort());
-                        if (session != null) {
-                            ipHeader.setSourceIP(ipHeader.getDestinationIP());
-                            tcpHeader.setSourcePort(session.RemotePort);
-                            ipHeader.setDestinationIP(LOCAL_IP);
-
-                            CommonMethods.ComputeTCPChecksum(ipHeader, tcpHeader);
-                            m_VPNOutputStream.write(ipHeader.m_Data, ipHeader.m_Offset, size);
-                            m_ReceivedBytes += size;
-                        } else {
-                            System.out.printf("NoSession: %s %s\n", ipHeader.toString(), tcpHeader.toString());
-                        }
-                    } else {
-
-                        // 添加端口映射
-                        int portKey = tcpHeader.getSourcePort();
-                        NatSession session = NatSessionManager.getSession(portKey);
-                        if (session == null || session.RemoteIP != ipHeader.getDestinationIP() || session.RemotePort != tcpHeader.getDestinationPort()) {
-                            session = NatSessionManager.createSession(portKey, ipHeader.getDestinationIP(), tcpHeader.getDestinationPort());
-                        }
-
-                        session.LastNanoTime = System.nanoTime();
-                        session.PacketSent++;//注意顺序
-
-                        int tcpDataSize = ipHeader.getDataLength() - tcpHeader.getHeaderLength();
-                        if (session.PacketSent == 2 && tcpDataSize == 0) {
-                            return;//丢弃tcp握手的第二个ACK报文。因为客户端发数据的时候也会带上ACK，这样可以在服务器Accept之前分析出HOST信息。
-                        }
-
-                        //分析数据，找到host
-                        if (session.BytesSent == 0 && tcpDataSize > 10) {
-                            int dataOffset = tcpHeader.m_Offset + tcpHeader.getHeaderLength();
-                            String host = HttpHostHeaderParser.parseHost(tcpHeader.m_Data, dataOffset, tcpDataSize);
-                            if (host != null) {
-                                session.RemoteHost = host;
-                            } else {
-                                System.out.printf("No host name found: %s", session.RemoteHost);
-                            }
-                        }
-
-                        // 转发给本地TCP服务器
+                // if (ipHeader.getSourceIP() == LOCAL_IP) {
+                if (tcpHeader.getSourcePort() == m_TcpProxyServer.Port) {// 收到本地TCP服务器数据
+                    NatSession session = NatSessionManager.getSession(tcpHeader.getDestinationPort());
+                    if (session != null) {
                         ipHeader.setSourceIP(ipHeader.getDestinationIP());
+                        tcpHeader.setSourcePort(session.RemotePort);
                         ipHeader.setDestinationIP(LOCAL_IP);
-                        tcpHeader.setDestinationPort(m_TcpProxyServer.Port);
 
                         CommonMethods.ComputeTCPChecksum(ipHeader, tcpHeader);
                         m_VPNOutputStream.write(ipHeader.m_Data, ipHeader.m_Offset, size);
-                        session.BytesSent += tcpDataSize;//注意顺序
-                        m_SentBytes += size;
+                        m_ReceivedBytes += size;
+                    } else {
+                        LogCat.i("NoSession: " + ipHeader.toString() + ' ' + tcpHeader.toString());
                     }
+                } else {
+                    // TODO TCPHeader 内容为空处理
+
+                    // 添加 NAPT 端口映射
+                    int portKey = tcpHeader.getSourcePort();
+                    NatSession session = NatSessionManager.getSession(portKey);
+                    if (session == null || session.RemoteIP != ipHeader.getDestinationIP() || session.RemotePort != tcpHeader.getDestinationPort()) {
+                        session = NatSessionManager.createSession(portKey, ipHeader.getDestinationIP(), tcpHeader.getDestinationPort());
+                    }
+
+                    session.LastNanoTime = System.nanoTime();
+                    session.PacketSent++; // TODO (不明白)，注意顺序
+
+                    int tcpDataSize = ipHeader.getDataLength() - tcpHeader.getHeaderLength();
+                    if (session.PacketSent == 2 && tcpDataSize == 0) {
+                        return; // TODO 丢弃tcp握手的第二个ACK报文。因为客户端发数据的时候也会带上ACK，这样可以在服务器Accept之前分析出HOST信息。
+                    }
+
+                    //分析数据，找到host
+                    if (session.BytesSent == 0 && tcpDataSize > 10) {
+                        int dataOffset = tcpHeader.m_Offset + tcpHeader.getHeaderLength(); // TODO ？？？
+                        String host = HttpHostHeaderParser.parseHost(tcpHeader.m_Data, dataOffset, tcpDataSize);
+                        if (host != null) {
+                            session.RemoteHost = host;
+                        } else {
+                            LogCat.i("No host name found: " + session.RemoteHost);
+                        }
+                    }
+
+                    // 转发给本地TCP服务器
+                    ipHeader.setSourceIP(ipHeader.getDestinationIP());
+                    ipHeader.setDestinationIP(LOCAL_IP);
+                    tcpHeader.setDestinationPort(m_TcpProxyServer.Port);
+
+                    CommonMethods.ComputeTCPChecksum(ipHeader, tcpHeader);
+                    m_VPNOutputStream.write(ipHeader.m_Data, ipHeader.m_Offset, size);
+                    session.BytesSent += tcpDataSize;//注意顺序
+                    m_SentBytes += size;
+                    // }
                 }
                 break;
             case IPHeader.UDP:
-                // 转发DNS数据包：
+                // TODO 代码阅读，转发DNS数据包：
                 UDPHeader udpHeader = m_UDPHeader;
                 udpHeader.m_Offset = ipHeader.getHeaderLength();
                 if (ipHeader.getSourceIP() == LOCAL_IP && udpHeader.getDestinationPort() == 53) {
@@ -364,54 +405,75 @@ public class LocalVpnService extends VpnService implements Runnable {
         }
     }
 
+
+    /**
+     * TODO Proxy VPNService 部分核心处理 End
+     */
+
+
+    /**
+     * TODO VpnService 本身使用 Begin
+     */
+
+    /**
+     * 检查是否准备完毕。
+     * TODO 调研 {@link VpnService#prepare(Context)}
+     */
     private void waitUntilPreapred() {
         while (prepare(this) != null) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LogCat.printStackTrace(e);
             }
         }
     }
 
+    /**
+     * TODO 提取为 Builder
+     *
+     * @return
+     * @throws Exception
+     */
     private ParcelFileDescriptor establishVPN() throws Exception {
         Builder builder = new Builder();
         builder.setMtu(ProxyConfig.getInstance().getMTU());
         if (IS_DEBUG)
-            System.out.printf("setMtu: %d\n", ProxyConfig.getInstance().getMTU());
+            LogCat.i("setMtu: " + ProxyConfig.getInstance().getMTU());
 
         IPAddress ipAddress = ProxyConfig.getInstance().getDefaultLocalIP();
         LOCAL_IP = CommonMethods.ipStringToInt(ipAddress.Address);
         builder.addAddress(ipAddress.Address, ipAddress.PrefixLength);
         if (IS_DEBUG)
-            System.out.printf("addAddress: %s/%d\n", ipAddress.Address, ipAddress.PrefixLength);
+            LogCat.i("setMtu: " + ipAddress.Address + '/' + ipAddress.PrefixLength);
 
         for (IPAddress dns : ProxyConfig.getInstance().getDnsList()) {
             builder.addDnsServer(dns.Address);
             if (IS_DEBUG)
-                System.out.printf("addDnsServer: %s\n", dns.Address);
+                LogCat.i("addDnsServer: " + dns.Address);
         }
 
         if (ProxyConfig.getInstance().getRouteList().size() > 0) {
             for (IPAddress routeAddress : ProxyConfig.getInstance().getRouteList()) {
                 builder.addRoute(routeAddress.Address, routeAddress.PrefixLength);
                 if (IS_DEBUG)
-                    System.out.printf("addRoute: %s/%d\n", routeAddress.Address, routeAddress.PrefixLength);
+                    LogCat.i("addRoute: " + routeAddress.Address + '/' + routeAddress.PrefixLength);
             }
             builder.addRoute(CommonMethods.ipIntToString(ProxyConfig.FAKE_NETWORK_IP), 16);
 
             if (IS_DEBUG)
-                System.out.printf("addRoute for FAKE_NETWORK: %s/%d\n", CommonMethods.ipIntToString(ProxyConfig.FAKE_NETWORK_IP), 16);
+                LogCat.i("addRoute: " + CommonMethods.ipIntToString(ProxyConfig.FAKE_NETWORK_IP) + '/' + 16);
         } else {
+            // TODO 应该有 ProxyConfig 完成
             builder.addRoute("0.0.0.0", 0);
             if (IS_DEBUG)
-                System.out.printf("addDefaultRoute: 0.0.0.0/0\n");
+                LogCat.i("addDefaultRoute: 0.0.0.0/0");
         }
 
-
+        // TODO SystemProperties，系统设置，获取"net.dns1", "net.dns2", "net.dns3", "net.dns4"
         Class<?> SystemProperties = Class.forName("android.os.SystemProperties");
         Method method = SystemProperties.getMethod("get", new Class[]{String.class});
-        ArrayList<String> servers = new ArrayList<String>();
+        ArrayList<String> servers = new ArrayList<>();
         for (String name : new String[]{"net.dns1", "net.dns2", "net.dns3", "net.dns4",}) {
             String value = (String) method.invoke(null, name);
             if (value != null && !"".equals(value) && !servers.contains(value)) {
@@ -422,7 +484,7 @@ public class LocalVpnService extends VpnService implements Runnable {
                     builder.addRoute(value, 128);
                 }
                 if (IS_DEBUG)
-                    System.out.printf("%s=%s\n", name, value);
+                    LogCat.i(name + '=' + value);
             }
         }
 
@@ -467,6 +529,14 @@ public class LocalVpnService extends VpnService implements Runnable {
         this.m_VPNOutputStream = null;
     }
 
+    /**
+     * TODO VpnService 本身使用 End
+     */
+
+
+    /**
+     * TODO 彻底的停止整个应用
+     */
     private synchronized void dispose() {
         // 断开VPN
         disconnectVPN();
@@ -475,28 +545,19 @@ public class LocalVpnService extends VpnService implements Runnable {
         if (m_TcpProxyServer != null) {
             m_TcpProxyServer.stop();
             m_TcpProxyServer = null;
-            writeLog("LocalTcpServer stopped.");
+            onStatusChanged(new ProxyState("LocalTcpServer stopped."));
         }
 
         // 停止DNS解析器
         if (m_DnsProxy != null) {
             m_DnsProxy.stop();
             m_DnsProxy = null;
-            writeLog("LocalDnsProxy stopped.");
+            onStatusChanged(new ProxyState("LocalDnsProxy stopped."));
         }
 
         stopSelf();
         running = false;
         System.exit(0);
-    }
-
-    @Override
-    public void onDestroy() {
-        LogCat.e("VPNService(%s) destoried.");
-        System.out.printf("VPNService(%s) destoried.\n", ID);
-        if (m_VPNThread != null) {
-            m_VPNThread.interrupt();
-        }
     }
 
 }
