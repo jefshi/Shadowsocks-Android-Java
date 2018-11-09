@@ -1,4 +1,6 @@
-package com.csp.proxy;
+package com.csp.proxy.constants;
+
+import com.csp.proxy.BuildConfig;
 
 /**
  * 代理常量

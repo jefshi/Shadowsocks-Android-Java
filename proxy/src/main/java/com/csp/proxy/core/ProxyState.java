@@ -1,6 +1,6 @@
 package com.csp.proxy.core;
 
-import com.csp.proxy.ProxyConstants;
+import com.csp.proxy.constants.ProxyConstants;
 
 /**
  * Created by chenshp on 2018/4/16.

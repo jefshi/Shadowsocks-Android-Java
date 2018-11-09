@@ -1,12 +1,15 @@
-package com.csp.proxy.core;
+package com.csp.proxy.core.config;
 
 
 import android.content.Context;
 import android.os.Build;
 
 
-import com.csp.proxy.ProxyConstants;
+import com.csp.proxy.constants.ProxyConstants;
 import com.csp.proxy.R;
+import com.csp.proxy.core.ChinaIpMaskManager;
+import com.csp.proxy.core.LocalVpnService;
+import com.csp.proxy.core.ProxyState;
 import com.csp.proxy.tcpip.CommonMethods;
 import com.csp.proxy.tunnel.Config;
 import com.csp.proxy.tunnel.httpconnect.HttpConnectConfig;

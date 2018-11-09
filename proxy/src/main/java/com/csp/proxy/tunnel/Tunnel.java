@@ -2,7 +2,7 @@ package com.csp.proxy.tunnel;
 
 import android.annotation.SuppressLint;
 
-import com.csp.proxy.ProxyConstants;
+import com.csp.proxy.constants.ProxyConstants;
 import com.csp.proxy.core.LocalVpnService;
 import com.csp.proxy.core.ProxyState;
 
@@ -13,6 +13,9 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
+/**
+ * TODO 未阅读
+ */
 public abstract class Tunnel {
 
     final static ByteBuffer GL_BUFFER = ByteBuffer.allocate(20000);

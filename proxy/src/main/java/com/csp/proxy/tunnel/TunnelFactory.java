@@ -1,17 +1,18 @@
-package com.csp.proxy.core;
+package com.csp.proxy.tunnel;
 
-import com.csp.proxy.tunnel.httpconnect.HttpConnectTunnel;
-import com.csp.proxy.tunnel.shadowsocks.ShadowsocksTunnel;
-import com.csp.proxy.tunnel.Config;
-import com.csp.proxy.tunnel.RawTunnel;
-import com.csp.proxy.tunnel.Tunnel;
+import com.csp.proxy.core.config.ProxyConfig;
 import com.csp.proxy.tunnel.httpconnect.HttpConnectConfig;
+import com.csp.proxy.tunnel.httpconnect.HttpConnectTunnel;
 import com.csp.proxy.tunnel.shadowsocks.ShadowsocksConfig;
+import com.csp.proxy.tunnel.shadowsocks.ShadowsocksTunnel;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
+/**
+ * TODO 未阅读
+ */
 public class TunnelFactory {
 
     public static Tunnel wrap(SocketChannel channel, Selector selector) {

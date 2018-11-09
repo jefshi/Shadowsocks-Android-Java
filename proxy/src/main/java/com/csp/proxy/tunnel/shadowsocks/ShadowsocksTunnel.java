@@ -7,6 +7,9 @@ import com.csp.proxy.tunnel.shadowsocks.crypt.base.ICrypt;
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 
+/**
+ * TODO 未阅读
+ */
 public class ShadowsocksTunnel extends Tunnel {
 
     private ICrypt m_Encryptor;

@@ -9,15 +9,19 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 
-import com.csp.proxy.ProxyConstants;
+import com.csp.proxy.constants.ProxyConstants;
 import com.csp.proxy.R;
+import com.csp.proxy.core.config.IPAddress;
+import com.csp.proxy.core.config.ProxyConfig;
 import com.csp.proxy.dns.DnsPacket;
+import com.csp.proxy.dns.DnsProxy;
 import com.csp.proxy.tcpip.CommonMethods;
 import com.csp.proxy.tcpip.HttpHostHeaderParser;
 import com.csp.proxy.tcpip.IPHeader;
 import com.csp.proxy.tcpip.NatSession;
 import com.csp.proxy.tcpip.NatSessionManager;
 import com.csp.proxy.tcpip.TCPHeader;
+import com.csp.proxy.tcpip.TcpProxyServer;
 import com.csp.proxy.tcpip.UDPHeader;
 import com.csp.utillib.AppInfoUtils;
 import com.csp.utillib.LogCat;
@@ -116,7 +120,7 @@ public class LocalVpnService extends VpnService implements Runnable {
         }
 
         onStatusChanged(ProxyState.STATE_DISCONNECTED);
-        AppProxyManager.getInstance().clearProxyApps();
+        AppManager.getInstance().clearProxyApps();
     }
 
     @Override
@@ -489,10 +493,10 @@ public class LocalVpnService extends VpnService implements Runnable {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (AppProxyManager.getInstance().getProxyApps().size() == 0) {
+            if (AppManager.getInstance().getProxyApps().size() == 0) {
                 writeLog("Proxy All Apps");
             }
-            for (ProxyApp app : AppProxyManager.getInstance().getProxyApps()) {
+            for (ProxyApp app : AppManager.getInstance().getProxyApps()) {
                 builder.addAllowedApplication("com.vm.shadowsocks");//需要把自己加入代理，不然会无法进行网络连接
                 try {
                     builder.addAllowedApplication(app.getPackageName());

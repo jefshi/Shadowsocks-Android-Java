@@ -1,6 +1,6 @@
 package com.csp.proxy.tcpip;
 
-import com.csp.proxy.ProxyConstants;
+import com.csp.proxy.constants.ProxyConstants;
 import com.csp.proxy.core.LocalVpnService;
 import com.csp.proxy.core.ProxyState;
 import com.csp.utillib.LogCat;

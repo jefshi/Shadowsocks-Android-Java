@@ -122,8 +122,8 @@ public class AppManager extends Activity {
             }
         });
 
-//        if (AppProxyManager.Instance.mlistAppInfo != null) {
-//            AppProxyManager.Instance.mlistAppInfo.clear();
+//        if (AppManager.Instance.mlistAppInfo != null) {
+//            AppManager.Instance.mlistAppInfo.clear();
         App.getBoostApps().clear();
         for (PackageInfo packageInfo : packageInfos) {
             String pkgName = packageInfo.packageName; // reInfo.activityInfo.packageName; // 获得应用程序的包名

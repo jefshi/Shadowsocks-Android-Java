@@ -5,10 +5,10 @@ import com.csp.utillib.EmptyUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AppProxyManager {
+public class AppManager {
     // public static boolean isLollipopOrAbove = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP; // TODO 取消
 
-    private static AppProxyManager instance; // TODO 取消
+    private static AppManager instance; // TODO 取消
     private static final String PROXY_APPS = "PROXY_APPS";
 
 //    private Context mContext;
@@ -23,16 +23,16 @@ public class AppProxyManager {
         return proxyApps;
     }
 
-    private AppProxyManager() {
+    private AppManager() {
 //        this.mContext = context;
 //        readProxyAppsList();
     }
 
-    public static AppProxyManager getInstance() {
+    public static AppManager getInstance() {
         if (instance == null) {
-            synchronized (AppProxyManager.class) {
+            synchronized (AppManager.class) {
                 if (instance == null)
-                    instance = new AppProxyManager();
+                    instance = new AppManager();
             }
         }
         return instance;

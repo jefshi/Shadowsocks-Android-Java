@@ -3,6 +3,7 @@ package com.csp.proxy.core;
 import android.content.Context;
 import android.content.Intent;
 
+import com.csp.proxy.core.config.ProxyConfig;
 import com.csp.proxy.core.observer.ProxyObserverable;
 import com.csp.utillib.EmptyUtil;
 import com.csp.utillib.LogCat;
@@ -17,7 +18,7 @@ class ProxyManagerImpl implements ProxyManager {
     private static ProxyManager instance;
     private Context mContext;
 
-    private AppProxyManager appProxyManager;
+    private AppManager mAppManager;
     private ProxyConfig proxyConfig;
 
     private ProxyObserverable observerable;
@@ -38,7 +39,7 @@ class ProxyManagerImpl implements ProxyManager {
 
     private ProxyManagerImpl(Context context) {
         this.mContext = context;
-        appProxyManager = AppProxyManager.getInstance(); // TODO 不要单例
+        mAppManager = AppManager.getInstance(); // TODO 不要单例
         proxyConfig = ProxyConfig.getInstance(); // TODO 不要单例
 
         observerable = new ProxyObserverable();
@@ -97,7 +98,7 @@ class ProxyManagerImpl implements ProxyManager {
             mContext.stopService(new Intent(mContext, LocalVpnService.class));
         }
 
-        appProxyManager.clearProxyApps();
+        mAppManager.clearProxyApps();
     }
 
     @Override
@@ -137,17 +138,17 @@ class ProxyManagerImpl implements ProxyManager {
 
     @Override
     public List<ProxyApp> getProxyApps() {
-        return appProxyManager.getProxyApps();
+        return mAppManager.getProxyApps();
     }
 
     @Override
     public boolean isProxyApp(ProxyApp app) {
-        return appProxyManager.isProxyApp(app);
+        return mAppManager.isProxyApp(app);
     }
 
     @Override
     public ProxyApp getProxyApp(String packageName) {
-        return appProxyManager.getProxyApp(packageName);
+        return mAppManager.getProxyApp(packageName);
     }
 
     @Override
@@ -156,7 +157,7 @@ class ProxyManagerImpl implements ProxyManager {
             return;
 
         app.proxyStarting();
-        appProxyManager.addProxyApp(app);
+        mAppManager.addProxyApp(app);
 //        if (LocalVpnService.isRunning())
 //            LocalVpnService.proxy_app_add = true;
 //
@@ -170,13 +171,13 @@ class ProxyManagerImpl implements ProxyManager {
             return;
 
         app.proxyStopping();
-        appProxyManager.removeProxyApp(app);
+        mAppManager.removeProxyApp(app);
 //        boolean existedApp = AppUtils.searchApplication(mContext, app.getPackageName()) != null;
 //
 //        if (existedApp && LocalVpnService.isRunning())
 //            LocalVpnService.proxy_app_remove = true;
 //
-//        if (appProxyManager.getProxyApps().size() == 0) {
+//        if (mAppManager.getProxyApps().size() == 0) {
 //            LocalVpnService.setRunning(false);
 //        } else if (existedApp) {
 //            rebootProxy(true);

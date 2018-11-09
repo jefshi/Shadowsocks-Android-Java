@@ -1,12 +1,10 @@
-package com.csp.proxy.core;
+package com.csp.proxy.dns;
 
 import android.util.SparseArray;
 
-import com.csp.proxy.ProxyConstants;
-import com.csp.proxy.dns.DnsPacket;
-import com.csp.proxy.dns.Question;
-import com.csp.proxy.dns.Resource;
-import com.csp.proxy.dns.ResourcePointer;
+import com.csp.proxy.constants.ProxyConstants;
+import com.csp.proxy.core.LocalVpnService;
+import com.csp.proxy.core.config.ProxyConfig;
 import com.csp.proxy.tcpip.CommonMethods;
 import com.csp.proxy.tcpip.IPHeader;
 import com.csp.proxy.tcpip.UDPHeader;
@@ -18,7 +16,9 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 
-
+/**
+ * TODO 未阅读
+ */
 public class DnsProxy implements Runnable {
 
     private class QueryState {

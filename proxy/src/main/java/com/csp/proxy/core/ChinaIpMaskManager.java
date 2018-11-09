@@ -3,7 +3,7 @@ package com.csp.proxy.core;
 import android.content.Context;
 import android.util.SparseIntArray;
 
-import com.csp.proxy.ProxyConstants;
+import com.csp.proxy.constants.ProxyConstants;
 import com.csp.proxy.R;
 import com.csp.proxy.tcpip.CommonMethods;
 import com.csp.utillib.LogCat;

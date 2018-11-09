@@ -1,10 +1,11 @@
-package com.csp.proxy.core;
+package com.csp.proxy.tcpip;
 
-import com.csp.proxy.ProxyConstants;
-import com.csp.proxy.tcpip.CommonMethods;
-import com.csp.proxy.tcpip.NatSession;
-import com.csp.proxy.tcpip.NatSessionManager;
+import com.csp.proxy.constants.ProxyConstants;
+import com.csp.proxy.core.LocalVpnService;
+import com.csp.proxy.core.config.ProxyConfig;
+import com.csp.proxy.core.ProxyState;
 import com.csp.proxy.tunnel.Tunnel;
+import com.csp.proxy.tunnel.TunnelFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -15,6 +16,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
 /**
+ * TODO 未阅读
  * TODO 在 VPNService 启动时，创建并运行了线程 TcpProxyServer，类似于上述讲到的ss-local本地 Sock5 代理服务器。
  */
 public class TcpProxyServer implements Runnable {

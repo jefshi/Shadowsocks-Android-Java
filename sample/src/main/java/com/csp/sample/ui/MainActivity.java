@@ -111,7 +111,7 @@ public class MainActivity extends Activity implements
 //        if (isLollipopOrAbove) {
 //            if (BoosterServer.getInstance().getProxyApps().size() != 0) {
 //                String tmpString = "";
-//                for (ProxyApp app : AppProxyManager.getInstance().getProxyApps()) {
+//                for (ProxyApp app : AppManager.getInstance().getProxyApps()) {
 //                    tmpString += ((BoostApp) app).getAppLabel() + ", ";
 //                }
 //                textViewProxyApp.setText(tmpString);

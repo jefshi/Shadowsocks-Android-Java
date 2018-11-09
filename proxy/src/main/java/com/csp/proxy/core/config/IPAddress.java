@@ -1,4 +1,4 @@
-package com.csp.proxy.core;
+package com.csp.proxy.core.config;
 
 public class IPAddress {
     public final String Address; // 修改存储类型

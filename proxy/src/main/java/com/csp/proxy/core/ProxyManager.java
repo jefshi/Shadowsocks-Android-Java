@@ -99,27 +99,27 @@ public interface ProxyManager {
     void unregisterReceiver(ProxyReceiver receiver);
 
     /**
-     * @see AppProxyManager#getProxyApps()
+     * @see AppManager#getProxyApps()
      */
     List<ProxyApp> getProxyApps();
 
     /**
-     * @see AppProxyManager#isProxyApp(ProxyApp)
+     * @see AppManager#isProxyApp(ProxyApp)
      */
     boolean isProxyApp(ProxyApp app);
 
     /**
-     * @see AppProxyManager#getProxyApp(String)
+     * @see AppManager#getProxyApp(String)
      */
     ProxyApp getProxyApp(String packageName);
 
     /**
-     * @see AppProxyManager#addProxyApp(ProxyApp)
+     * @see AppManager#addProxyApp(ProxyApp)
      */
     void addProxyApp(ProxyApp app);
 
     /**
-     * @see AppProxyManager#removeProxyApp(ProxyApp)
+     * @see AppManager#removeProxyApp(ProxyApp)
      */
     void removeProxyApp(ProxyApp app);
 }

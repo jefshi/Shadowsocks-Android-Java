@@ -1,7 +1,7 @@
 package com.csp.proxy.tunnel.httpconnect;
 
-import com.csp.proxy.ProxyConstants;
-import com.csp.proxy.core.ProxyConfig;
+import com.csp.proxy.constants.ProxyConstants;
+import com.csp.proxy.core.config.ProxyConfig;
 import com.csp.proxy.tunnel.Tunnel;
 
 import java.io.IOException;

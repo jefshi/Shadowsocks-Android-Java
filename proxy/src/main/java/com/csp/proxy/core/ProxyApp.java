@@ -1,6 +1,6 @@
 package com.csp.proxy.core;
 
-import com.csp.proxy.ProxyConstants;
+import com.csp.proxy.constants.ProxyConstants;
 import com.csp.utillib.DateUtils;
 
 public class ProxyApp {
