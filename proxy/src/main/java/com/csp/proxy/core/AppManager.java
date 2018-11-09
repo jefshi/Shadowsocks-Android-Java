@@ -6,12 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AppManager {
-    // public static boolean isLollipopOrAbove = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP; // TODO 取消
-
-    private static AppManager instance; // TODO 取消
-    private static final String PROXY_APPS = "PROXY_APPS";
-
-//    private Context mContext;
     private List<ProxyApp> proxyApps = new ArrayList<>(); // 被代理了的应用列表
 
     /**
@@ -23,19 +17,7 @@ public class AppManager {
         return proxyApps;
     }
 
-    private AppManager() {
-//        this.mContext = context;
-//        readProxyAppsList();
-    }
-
-    public static AppManager getInstance() {
-        if (instance == null) {
-            synchronized (AppManager.class) {
-                if (instance == null)
-                    instance = new AppManager();
-            }
-        }
-        return instance;
+    public AppManager() {
     }
 
     /**
@@ -77,7 +59,6 @@ public class AppManager {
                 break;
             }
         }
-//        writeProxyAppsList();
     }
 
     /**
@@ -87,7 +68,6 @@ public class AppManager {
      */
     public void addProxyApp(ProxyApp app) {
         proxyApps.add(app);
-//        writeProxyAppsList();
     }
 
     /**
@@ -95,48 +75,5 @@ public class AppManager {
      */
     public void clearProxyApps() {
         proxyApps.clear();
-//        writeProxyAppsList();
     }
-//
-//    private void readProxyAppsList() {
-//        SharedPreferences preferences = mContext.getSharedPreferences("shadowsocksProxyUrl", MODE_PRIVATE); // TODO 修改 SharedPreferences 文件名
-//        String tmpString = preferences.getString(PROXY_APPS, "");
-//        try {
-//            if (proxyApps != null) {
-//                proxyApps.clear();
-//            }
-//            if (tmpString.isBank()) {
-//                return;
-//            }
-//            // TODO JSON --> gson，如果应用不存在，则清空
-//            JSONArray jsonArray = new JSONArray(tmpString);
-//            for (int i = 0; i < jsonArray.length(); i++) {
-//                JSONObject object = jsonArray.getJSONObject(i);
-//                ProxyApp appInfo = new ProxyApp();
-//                appInfo.setPackageName(object.getString("package_name"));
-//                proxyApps.add(appInfo);
-//            }
-//        } catch (Exception e) {
-//            LogCat.printStackTrace(e);
-//        }
-//    }
-//
-//    private void writeProxyAppsList() {
-//        SharedPreferences preferences = mContext.getSharedPreferences("shadowsocksProxyUrl", MODE_PRIVATE); // TODO 修改 SharedPreferences 文件名
-//        try {
-//            // TODO JSON --> gson
-//            JSONArray jsonArray = new JSONArray();
-//            for (int i = 0; i < proxyApps.size(); i++) {
-//                JSONObject object = new JSONObject();
-//                ProxyApp appInfo = proxyApps.get(i);
-//                object.put("package_name", appInfo.getPackageName());
-//                jsonArray.put(object);
-//            }
-//            SharedPreferences.Editor editor = preferences.edit();
-//            editor.putString(PROXY_APPS, jsonArray.toString());
-//            editor.apply();
-//        } catch (Exception e) {
-//            LogCat.printStackTrace(e);
-//        }
-//    }
 }

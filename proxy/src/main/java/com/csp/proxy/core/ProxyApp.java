@@ -3,11 +3,17 @@ package com.csp.proxy.core;
 import com.csp.proxy.constants.ProxyConstants;
 import com.csp.utillib.DateUtils;
 
-public class ProxyApp {
+import java.io.Serializable;
+
+public class ProxyApp implements Serializable {
+    private static final long serialVersionUID = -4043531473879316216L;
+
     private String packageName;
     private String proxyUrl;
-    private boolean boosted;
     private int proxyState;
+
+    private int boostWay;
+    private boolean boosted;
     private long beginClock;
 
     public ProxyApp() {
@@ -30,20 +36,28 @@ public class ProxyApp {
         this.proxyUrl = proxyUrl;
     }
 
-    public boolean isBoosted() {
-        return boosted;
-    }
-
-    public void setBoosted(boolean boosted) {
-        this.boosted = boosted;
-    }
-
     public int getProxyState() {
         return proxyState;
     }
 
     public void setProxyState(int proxyState) {
         this.proxyState = proxyState;
+    }
+
+    public int getBoostWay() {
+        return boostWay;
+    }
+
+    public void setBoostWay(int boostWay) {
+        this.boostWay = boostWay;
+    }
+
+    public boolean isBoosted() {
+        return boosted;
+    }
+
+    public void setBoosted(boolean boosted) {
+        this.boosted = boosted;
     }
 
     public long getBeginClock() {
@@ -68,7 +82,7 @@ public class ProxyApp {
     /**
      * 代理开始中
      */
-    void proxyStarting() {
+    public void proxyStarting() {
         boosted = false;
         proxyState = ProxyConstants.STATE_PROXY_STARTING;
         this.beginClock = 0;
@@ -86,7 +100,7 @@ public class ProxyApp {
     /**
      * 停止代理中
      */
-    void proxyStopping() {
+    public void proxyStopping() {
         boosted = true;
         proxyState = ProxyConstants.STATE_PROXY_STOPPTING;
     }

@@ -30,7 +30,8 @@ public class ProxyObserverable implements Observerable {
     @Override
     public void onStatusChanged(ProxyState state) {
         for (ProxyReceiver listener : proxyListeners) {
-            listener.onStatusChanged(state);
+            if (listener != null)
+                listener.onStatusChanged(state);
         }
     }
 }

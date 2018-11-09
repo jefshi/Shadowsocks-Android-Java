@@ -12,7 +12,6 @@ import java.util.List;
 
 /**
  * Created by chenshp on 2018/4/10.
- * TODO 不需要接口
  */
 class ProxyManagerImpl implements ProxyManager {
     private static ProxyManager instance;
@@ -22,10 +21,6 @@ class ProxyManagerImpl implements ProxyManager {
     private ProxyConfig proxyConfig;
 
     private ProxyObserverable observerable;
-
-    public ProxyObserverable getObserverable() {
-        return observerable;
-    }
 
     public static ProxyManager getInstance(Context context) {
         if (instance == null) {
@@ -37,9 +32,18 @@ class ProxyManagerImpl implements ProxyManager {
         return instance;
     }
 
+    @Override
+    public AppManager getAppManager() {
+        return mAppManager;
+    }
+
+    public ProxyObserverable getObserverable() {
+        return observerable;
+    }
+
     private ProxyManagerImpl(Context context) {
         this.mContext = context;
-        mAppManager = AppManager.getInstance(); // TODO 不要单例
+        mAppManager = new AppManager();
         proxyConfig = ProxyConfig.getInstance(); // TODO 不要单例
 
         observerable = new ProxyObserverable();
@@ -59,8 +63,11 @@ class ProxyManagerImpl implements ProxyManager {
 
     @Override
     public Intent prepare() {
-        if (LocalVpnService.isRunning())
-            throw new Error("Proxy running, can't restart!"); // TODO
+        if (LocalVpnService.isRunning()) {
+            LocalVpnService.setRunning(false);
+            LogCat.e("Proxy running, can't restart!");
+            observerable.onStatusChanged(new ProxyState("Proxy running, can't restart!"));
+        }
 
         return LocalVpnService.prepare(mContext);
     }
@@ -77,14 +84,27 @@ class ProxyManagerImpl implements ProxyManager {
             throw new Exception("please sure proxy url is valid!");
 
         LocalVpnService.setProxyUrl(proxyUrl);
-//        rebootProxy(false);
+        rebootProxy(false);
     }
 
     @Override
     public void startProxy() {
-        if (isPrepareProxy() != PREPARE_VALID) {
-            stopProxy();
-            throw new Error("proxy hadn't prepare!");
+        int prepareResult = isPrepareProxy();
+        if (prepareResult != PREPARE_VALID) {
+            if ((prepareResult & ProxyManager.PREPARE_PROXY_URL_INVALID) == ProxyManager.PREPARE_PROXY_URL_INVALID) {
+                try {
+                    refreshProxyUrl(ProxyConstants.URL);
+                } catch (Exception e) {
+                    LogCat.printStackTrace(e);
+                }
+            } else {
+                LocalVpnService.setRunning(false);
+                mAppManager.clearProxyApps();
+                // stopProxy();
+                LogCat.e("proxy hadn't prepare! result = " + prepareResult);
+                ProxyState.STATE_INTERRUPT.setException(new Exception("proxy hadn't prepare! result = " + prepareResult));
+                observerable.onStatusChanged(ProxyState.STATE_INTERRUPT);
+            }
         }
 
         mContext.startService(new Intent(mContext, LocalVpnService.class));
@@ -92,12 +112,20 @@ class ProxyManagerImpl implements ProxyManager {
 
     @Override
     public void stopProxy() {
-        if (LocalVpnService.Instance != null) {
-            LocalVpnService.setRunning(false);
-            LocalVpnService.Instance.disconnectVPN();
-            mContext.stopService(new Intent(mContext, LocalVpnService.class));
+        List<ProxyApp> proxyApps = mAppManager.getProxyApps();
+        for (ProxyApp app : proxyApps) {
+            app.proxyStopping();
         }
 
+        if (LocalVpnService.Instance != null) {
+            LocalVpnService.setRunning(false);
+            // LocalVpnService.Instance.disconnectVPN();
+            // mContext.stopService(new Intent(mContext, LocalVpnService.class));
+        }
+
+        for (ProxyApp app : proxyApps) {
+            app.proxyStoped();
+        }
         mAppManager.clearProxyApps();
     }
 
@@ -157,11 +185,18 @@ class ProxyManagerImpl implements ProxyManager {
             return;
 
         app.proxyStarting();
+        mAppManager.clearProxyApps();
         mAppManager.addProxyApp(app);
-//        if (LocalVpnService.isRunning())
-//            LocalVpnService.proxy_app_add = true;
-//
-//        rebootProxy(true);
+        if (LocalVpnService.isRunning())
+            LocalVpnService.proxy_app_add = true;
+
+        try {
+            refreshProxyUrl(app.getProxyUrl());
+        } catch (Exception e) {
+            LogCat.printStackTrace(e);
+        }
+
+        rebootProxy(true);
         app.proxyStarted();
     }
 
@@ -172,16 +207,16 @@ class ProxyManagerImpl implements ProxyManager {
 
         app.proxyStopping();
         mAppManager.removeProxyApp(app);
-//        boolean existedApp = AppUtils.searchApplication(mContext, app.getPackageName()) != null;
-//
-//        if (existedApp && LocalVpnService.isRunning())
-//            LocalVpnService.proxy_app_remove = true;
-//
-//        if (mAppManager.getProxyApps().size() == 0) {
-//            LocalVpnService.setRunning(false);
-//        } else if (existedApp) {
-//            rebootProxy(true);
-//        }
+        boolean existedApp = AppUtils.searchApplication(mContext, app.getPackageName()) != null;
+
+        if (existedApp && LocalVpnService.isRunning())
+            LocalVpnService.proxy_app_remove = true;
+
+        if (mAppManager.getProxyApps().size() == 0) {
+            LocalVpnService.setRunning(false);
+        } else if (existedApp) {
+            rebootProxy(true);
+        }
         app.proxyStoped();
     }
 

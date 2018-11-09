@@ -5,6 +5,9 @@ import android.util.SparseArray;
 import com.csp.proxy.dns.DnsProxy;
 import com.csp.proxy.core.config.ProxyConfig;
 
+/**
+ * TODO 未阅读
+ */
 public class NatSessionManager {
 
     static final int MAX_SESSION_COUNT = 60;
@@ -13,7 +16,7 @@ public class NatSessionManager {
 
     public static NatSession getSession(int portKey) {
         NatSession session = Sessions.get(portKey);
-        if (session!=null) {
+        if (session != null) {
             session.LastNanoTime = System.nanoTime();
         }
         return Sessions.get(portKey);

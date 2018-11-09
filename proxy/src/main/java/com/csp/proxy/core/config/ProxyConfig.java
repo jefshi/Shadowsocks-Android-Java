@@ -35,8 +35,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ProxyConfig {
-    private static ProxyConfig INSTANCE = new ProxyConfig();
-
     private final static boolean IS_DEBUG = ProxyConstants.LOG_DEBUG; // TODO DEBUG 模式
     public static String AppInstallID;
     public static String AppVersion;
@@ -117,6 +115,9 @@ public class ProxyConfig {
             LocalVpnService.Instance.onStatusChanged(state);
         }
     }
+
+
+    private static ProxyConfig INSTANCE = new ProxyConfig();
 
     public static ProxyConfig getInstance() {
 //        if (INSTANCE == null) {

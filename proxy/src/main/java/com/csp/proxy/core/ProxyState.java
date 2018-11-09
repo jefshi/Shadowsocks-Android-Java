@@ -11,6 +11,7 @@ public class ProxyState {
     private boolean running;
     private String content;
     private Exception exception;
+    private String packageName; // TODO STATE_APP_PROXY_ADD or STATE_APP_PROXY_REMOVE
 
     // TODO 去除 Begin
     @Deprecated
@@ -53,13 +54,46 @@ public class ProxyState {
             this.exception = e;
     }
 
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
+    }
+
+
+    private String getStateName() {
+        switch (code) {
+            case CODE_LOG:
+                return "CODE_LOG";
+            case CODE_DISCONNECTED:
+                return "CODE_DISCONNECTED";
+            case CODE_INTERRUPT:
+                return "CODE_INTERRUPT";
+//            case CODE_APPS_ALLOWED:
+//                return "CODE_APPS_ALLOWED";
+            case CODE_CONNECTED:
+                return "CODE_CONNECTED";
+            case CODE_APP_PROXY_ADD:
+                return "CODE_APP_PROXY_ADD";
+            case CODE_APP_PROXY_REMOVE:
+                return "CODE_APP_PROXY_REMOVE";
+            case CODE_EXCEPTION:
+                return "CODE_EXCEPTION";
+            default:
+                return "default";
+        }
+    }
+
     @Override
     public String toString() {
         return !ProxyConstants.TOSTRING_DEBUG ? super.toString() : "ProxyState{" +
-                "code=" + code +
+                "code=" + getStateName() +
                 ", running=" + running +
                 ", content='" + content + '\'' +
                 ", exception=" + exception +
+                ", packageName=" + packageName +
                 '}';
     }
 
@@ -69,7 +103,7 @@ public class ProxyState {
     public static final int CODE_LOG = 0;
     public static final int CODE_DISCONNECTED = 10;
     public static final int CODE_INTERRUPT = 20;
-    public static final int CODE_APPS_ALLOWED = 30;
+    // public static final int CODE_APPS_ALLOWED = 30;
     public static final int CODE_CONNECTED = 50;
     public static final int CODE_APP_PROXY_ADD = 60;
     public static final int CODE_APP_PROXY_REMOVE = 61;
@@ -77,7 +111,7 @@ public class ProxyState {
 
     public static final ProxyState STATE_DISCONNECTED = new ProxyState(CODE_DISCONNECTED, false); // 代理服务已断开连接
     public static final ProxyState STATE_INTERRUPT = new ProxyState(CODE_INTERRUPT, false); // 代理服务已中止连接
-    public static final ProxyState STATE_APPS_ALLOWED = new ProxyState(CODE_APPS_ALLOWED, false); // 被代理的应用已限制，TODO，存在风险
+    // public static final ProxyState STATE_APPS_ALLOWED = new ProxyState(CODE_APPS_ALLOWED, false); // 被代理的应用已限制，TODO，存在风险
     public static final ProxyState STATE_CONNECTED = new ProxyState(CODE_CONNECTED, true); // 代理服务已连接
     public static final ProxyState STATE_APP_PROXY_ADD = new ProxyState(CODE_APP_PROXY_ADD, true); // 被代理应用追加，代理服务仍然连接
     public static final ProxyState STATE_APP_PROXY_REMOVE = new ProxyState(CODE_APP_PROXY_REMOVE, true); // 被代理应用移除，代理服务仍然连接

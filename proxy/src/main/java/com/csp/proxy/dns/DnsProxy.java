@@ -30,6 +30,8 @@ public class DnsProxy implements Runnable {
         public short RemotePort;
     }
 
+    private ProxyConfig proxyConfig = ProxyConfig.getInstance();
+
     public boolean Stopped;
     private static final ConcurrentHashMap<Integer, String> IPDomainMaps = new ConcurrentHashMap<Integer, String>();
     private static final ConcurrentHashMap<String, Integer> DomainIPMaps = new ConcurrentHashMap<String, Integer>();
@@ -44,6 +46,7 @@ public class DnsProxy implements Runnable {
         m_Client = new DatagramSocket(0);
     }
 
+    // TODO ？？？
     public static String reverseLookup(int ip) {
         return IPDomainMaps.get(ip);
     }
@@ -90,7 +93,7 @@ public class DnsProxy implements Runnable {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    LocalVpnService.Instance.writeLog("Parse dns error: %s", e);
+                    LocalVpnService.Instance.onStatusChanged(new ProxyState("Parse dns error: %s", e));
                 }
             }
         } catch (Exception e) {
@@ -123,7 +126,7 @@ public class DnsProxy implements Runnable {
         rPointer.setDomain((short) 0xC00C);
         rPointer.setType(question.Type);
         rPointer.setClass(question.Class);
-        rPointer.setTTL(ProxyConfig.getInstance().getDnsTTL());
+        rPointer.setTTL(proxyConfig.getDnsTTL());
         rPointer.setDataLength((short) 4);
         rPointer.setIP(newIP);
 
@@ -150,7 +153,7 @@ public class DnsProxy implements Runnable {
             Question question = dnsPacket.Questions[0];
             if (question.Type == 1) {
                 int realIP = getFirstIP(dnsPacket);
-                if (ProxyConfig.getInstance().needProxy(question.Domain, realIP)) {
+                if (proxyConfig.needProxy(question.Domain, realIP)) {
                     int fakeIP = getOrCreateFakeIP(question.Domain);
                     tamperDnsResponse(rawPacket, dnsPacket, fakeIP);
                     if (ProxyConstants.LOG_DEBUG)
@@ -201,7 +204,7 @@ public class DnsProxy implements Runnable {
         Question question = dnsPacket.Questions[0];
         System.out.println("DNS Qeury " + question.Domain);
         if (question.Type == 1) {
-            if (ProxyConfig.getInstance().needProxy(question.Domain, getIPFromCache(question.Domain))) {
+            if (proxyConfig.needProxy(question.Domain, getIPFromCache(question.Domain))) {
                 int fakeIP = getOrCreateFakeIP(question.Domain);
                 tamperDnsResponse(ipHeader.m_Data, dnsPacket, fakeIP);
 

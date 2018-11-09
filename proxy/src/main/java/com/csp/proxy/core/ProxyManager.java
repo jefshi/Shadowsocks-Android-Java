@@ -122,4 +122,6 @@ public interface ProxyManager {
      * @see AppManager#removeProxyApp(ProxyApp)
      */
     void removeProxyApp(ProxyApp app);
+
+    AppManager getAppManager();
 }

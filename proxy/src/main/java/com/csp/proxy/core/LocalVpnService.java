@@ -37,32 +37,43 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LocalVpnService extends VpnService implements Runnable {
-    private final boolean IS_DEBUG = ProxyConstants.LOG_DEBUG;
-
+    private final static boolean IS_DEBUG = ProxyConstants.LOG_DEBUG;
     public static LocalVpnService Instance;
-    private static String proxyUrl;
+    private static String proxyUrl; // 代理配置
     private static boolean running = false;
 
-    private static int ID;
-    private static int LOCAL_IP;
-    private static ConcurrentHashMap<onStatusChangedListener, Object> m_OnStatusChangedListeners = new ConcurrentHashMap<onStatusChangedListener, Object>();
+    private static int LOCAL_IP; // 本地 IP
 
-    private Thread m_VPNThread;
     private ParcelFileDescriptor m_VPNInterface;
-    private TcpProxyServer m_TcpProxyServer;
-    private DnsProxy m_DnsProxy;
     private FileOutputStream m_VPNOutputStream;
 
-    private byte[] m_Packet;
-    private IPHeader m_IPHeader;
-    private TCPHeader m_TCPHeader;
-    private UDPHeader m_UDPHeader;
-    private ByteBuffer m_DNSBuffer;
-    private Handler m_Handler;
-    private long m_SentBytes;
-    private long m_ReceivedBytes;
+
+    private TcpProxyServer m_TcpProxyServer;
+    private DnsProxy m_DnsProxy;
+
+    private final ProxyConfig proxyConfig = ProxyConfig.getInstance();
+
+    public static boolean proxy_app_add = false;
+    public static boolean proxy_app_remove = false;
 
     public static ProxyState sProxyState;
+
+
+    // TODO IP 数据报处理
+    private byte[] m_Packet; // TODO 读取的 IP 数据报存放地
+    private IPHeader m_IPHeader;
+    private TCPHeader m_TCPHeader;
+
+    private Handler m_Handler;
+
+    // TODO 未阅读 Begin
+    private Thread m_VPNThread;
+    private UDPHeader m_UDPHeader;
+    private ByteBuffer m_DNSBuffer;
+    private long m_SentBytes;
+    private long m_ReceivedBytes;
+    // TODO 未阅读 End
+
     private ProxyManagerImpl proxyManager;
 
     public static boolean isRunning() {
@@ -82,11 +93,11 @@ public class LocalVpnService extends VpnService implements Runnable {
     }
 
     public LocalVpnService() {
-        ID++;
         m_Handler = new Handler();
-        m_Packet = new byte[20000];
+        m_Packet = new byte[20000]; // 长度定义
         m_IPHeader = new IPHeader(m_Packet, 0);
         m_TCPHeader = new TCPHeader(m_Packet, 20);
+        Instance = this;
 
         proxyManager = (ProxyManagerImpl) ProxyServer.getProxyManager(this);
 
@@ -96,15 +107,10 @@ public class LocalVpnService extends VpnService implements Runnable {
         // TODO 未阅读 End
 
         sProxyState = ProxyState.STATE_DISCONNECTED;
-
-        Instance = this;
-
-        System.out.printf("New VPNService(%d)\n", ID);
     }
 
     @Override
     public void onCreate() {
-        System.out.printf("VPNService(%s) created.\n", ID);
         // Start a new session by creating a new thread.
         m_VPNThread = new Thread(this, "VPNServiceThread");
         m_VPNThread.start();
@@ -113,14 +119,15 @@ public class LocalVpnService extends VpnService implements Runnable {
 
     @Override
     public void onDestroy() {
-        LogCat.e("VPNService(%s) destoried.");
-        System.out.printf("VPNService(%s) destoried.\n", ID);
+        LogCat.e("VPNService.onDestroy()");
+        // TODO 未阅读 Begin 作用未知
         if (m_VPNThread != null) {
             m_VPNThread.interrupt();
         }
+        // TODO 未阅读 End
 
         onStatusChanged(ProxyState.STATE_DISCONNECTED);
-        AppManager.getInstance().clearProxyApps();
+        proxyManager.getAppManager().clearProxyApps();
     }
 
     @Override
@@ -129,35 +136,9 @@ public class LocalVpnService extends VpnService implements Runnable {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    public interface onStatusChangedListener {
-        public void onStatusChanged(String status, Boolean isRunning);
-
-        public void onLogReceived(String logString);
-    }
-
-    public static void addOnStatusChangedListener(onStatusChangedListener listener) {
-        if (!m_OnStatusChangedListeners.containsKey(listener)) {
-            m_OnStatusChangedListeners.put(listener, 1);
-        }
-    }
-
-    public static void removeOnStatusChangedListener(onStatusChangedListener listener) {
-        if (m_OnStatusChangedListeners.containsKey(listener)) {
-            m_OnStatusChangedListeners.remove(listener);
-        }
-    }
-
-    private void onStatusChanged(final String status, final boolean isRunning) {
-        m_Handler.post(new Runnable() {
-            @Override
-            public void run() {
-                for (Map.Entry<onStatusChangedListener, Object> entry : m_OnStatusChangedListeners.entrySet()) {
-                    entry.getKey().onStatusChanged(status, isRunning);
-                }
-            }
-        });
-    }
-
+    /**
+     * TODO 修改参数
+     */
     public void onStatusChanged(final ProxyState state) {
         if (state.getCode() != ProxyState.CODE_LOG) {
             sProxyState = state;
@@ -170,17 +151,6 @@ public class LocalVpnService extends VpnService implements Runnable {
         });
     }
 
-    public void writeLog(final String format, Object... args) {
-        final String logString = String.format(format, args);
-        m_Handler.post(new Runnable() {
-            @Override
-            public void run() {
-                for (Map.Entry<onStatusChangedListener, Object> entry : m_OnStatusChangedListeners.entrySet()) {
-                    entry.getKey().onLogReceived(logString);
-                }
-            }
-        });
-    }
     // TODO 未阅读 Begin
     public void sendUDPPacket(IPHeader ipHeader, UDPHeader udpHeader) {
         try {
@@ -198,104 +168,96 @@ public class LocalVpnService extends VpnService implements Runnable {
         String appInstallID = preferences.getString("AppInstallID", null);
         if (appInstallID == null || appInstallID.isEmpty()) {
             appInstallID = UUID.randomUUID().toString();
-            Editor editor = preferences.edit();
+            SharedPreferences.Editor editor = preferences.edit();
             editor.putString("AppInstallID", appInstallID);
             editor.apply();
         }
         return appInstallID;
     }
 
-//    String getVersionName() {
-//        try {
-//            PackageManager packageManager = getPackageManager();
-//            // getPackageName()是你当前类的包名，0代表是获取版本信息
-//            PackageInfo packInfo = packageManager.getPackageInfo(getPackageName(), 0);
-//            String version = packInfo.versionName;
-//            return version;
-//        } catch (Exception e) {
-//            return "0.0";
-//        }
-//    }
-
     private String getVersionName() {
-        String versionName = AppInfoUtils.getVersionName(this);
+        String versionName = AppInfoUtils.getVersionName();
         return versionName == null ? "0.0" : versionName;
     }
 
     @Override
     public synchronized void run() {
         try {
-            System.out.printf("VPNService(%s) work thread is runing...\n", ID);
+            onStatusChanged(new ProxyState("VPNService work thread is runing..."));
 
-            ProxyConfig.AppInstallID = getAppInstallID();//获取安装ID
-            ProxyConfig.AppVersion = getVersionName();//获取版本号
-            System.out.printf("AppInstallID: %s\n", ProxyConfig.AppInstallID);
-            writeLog("Android version: %s", Build.VERSION.RELEASE);
-            writeLog("App version: %s", ProxyConfig.AppVersion);
+            ProxyConfig.AppInstallID = getAppInstallID(); // TODO 获取安装ID，移动到 ProxyConfig 自身中
+            ProxyConfig.AppVersion = getVersionName(); // TODO 获取版本号，移动到 ProxyConfig 自身中
+            System.out.printf("AppInstallID: %s\n", ProxyConfig.AppInstallID); // TODO 作用未知
+            onStatusChanged(new ProxyState("Android version: %s", Build.VERSION.RELEASE));
+            onStatusChanged(new ProxyState("App version: %s", ProxyConfig.AppVersion));
 
+            ChinaIpMaskManager.loadFromFile(this);
+            waitUntilPreapred(); // TODO VpnService#prepare()
 
-            ChinaIpMaskManager.loadFromFile(this);//加载中国的IP段，用于IP分流。
-            waitUntilPreapred();//检查是否准备完毕。
-
-            writeLog("Load config from file ...");
+            onStatusChanged(new ProxyState("Load config from file ..."));
             try {
-                ProxyConfig.getInstance().loadFromFile(this);
-                writeLog("Load done");
+                proxyConfig.loadFromFile(this);
+                onStatusChanged(new ProxyState("Load done"));
             } catch (Exception e) {
                 String errString = e.getMessage();
                 if (errString == null || errString.isEmpty()) {
                     errString = e.toString();
                 }
-                writeLog("Load failed with error: %s", errString);
+                onStatusChanged(new ProxyState("Load failed with error: %s", errString));
             }
 
+            // TODO 本地 Sock5 代理服务器启动
             m_TcpProxyServer = new TcpProxyServer(0);
             m_TcpProxyServer.start();
-            writeLog("LocalTcpServer started.");
+            onStatusChanged(new ProxyState("LocalTcpServer started."));
 
+            // TODO ？？？
             m_DnsProxy = new DnsProxy();
             m_DnsProxy.start();
-            writeLog("LocalDnsProxy started.");
+            onStatusChanged(new ProxyState("LocalDnsProxy started."));
 
+            // TODO 不进行 prepare() ？？？ 貌似不是，监听，并读写虚拟网卡 IP 数据包
             while (true) {
                 if (running) {
                     //加载配置文件
 
-                    writeLog("set shadowsocks/(http proxy)");
+                    onStatusChanged(new ProxyState("set shadowsocks/(http proxy)"));
                     try {
-                        ProxyConfig.getInstance().m_ProxyList.clear();
-                        ProxyConfig.getInstance().addProxyToList(proxyUrl);
-                        writeLog("Proxy is: %s", ProxyConfig.getInstance().getDefaultProxy());
+                        proxyConfig.m_ProxyList.clear();
+                        proxyConfig.addProxyToList(proxyUrl); // TODO 调整位置
+                        onStatusChanged(new ProxyState("Proxy is: %s", proxyConfig.getDefaultProxy().toString()));
                     } catch (Exception e) {
-                        ;
                         String errString = e.getMessage();
                         if (errString == null || errString.isEmpty()) {
                             errString = e.toString();
                         }
                         running = false;
-                        onStatusChanged(errString, false);
+                        ProxyState.STATE_EXCEPTION.setException(e);
+                        onStatusChanged(ProxyState.STATE_EXCEPTION);
+                        LogCat.printStackTrace(e);
                         continue;
                     }
-                    String welcomeInfoString = ProxyConfig.getInstance().getWelcomeInfo();
+
+                    String welcomeInfoString = proxyConfig.getWelcomeInfo();
                     if (welcomeInfoString != null && !welcomeInfoString.isEmpty()) {
-                        writeLog("%s", ProxyConfig.getInstance().getWelcomeInfo());
+                        onStatusChanged(new ProxyState("%s", proxyConfig.getWelcomeInfo()));
                     }
-                    writeLog("Global mode is " + (ProxyConfig.getInstance().isGlobalMode() ? "on" : "off"));
+                    onStatusChanged(new ProxyState("Global mode is " + (proxyConfig.isGlobalMode() ? "on" : "off")));
 
                     runVPN();
                 } else {
                     Thread.sleep(100);
                 }
             }
-        } catch (InterruptedException e) {
-            System.out.println(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            writeLog("Fatal error: %s", e.toString());
+            LogCat.printStackTrace(e);
+            onStatusChanged(new ProxyState("Fatal error: %s", e.toString()));
         } finally {
-            writeLog("App terminated.");
+            onStatusChanged(new ProxyState("App terminated."));
             dispose();
         }
+
+        LogCat.e("VPNService.run() end");
     }
 
     /**
@@ -338,7 +300,6 @@ public class LocalVpnService extends VpnService implements Runnable {
 
                 TCPHeader tcpHeader = m_TCPHeader;
                 tcpHeader.m_Offset = ipHeader.getHeaderLength();
-                // if (ipHeader.getSourceIP() == LOCAL_IP) {
                 if (tcpHeader.getSourcePort() == m_TcpProxyServer.Port) {// 收到本地TCP服务器数据
                     NatSession session = NatSessionManager.getSession(tcpHeader.getDestinationPort());
                     if (session != null) {
@@ -370,7 +331,7 @@ public class LocalVpnService extends VpnService implements Runnable {
                         return; // TODO 丢弃tcp握手的第二个ACK报文。因为客户端发数据的时候也会带上ACK，这样可以在服务器Accept之前分析出HOST信息。
                     }
 
-                    //分析数据，找到host
+                    // 分析数据，找到host
                     if (session.BytesSent == 0 && tcpDataSize > 10) {
                         int dataOffset = tcpHeader.m_Offset + tcpHeader.getHeaderLength(); // TODO ？？？
                         String host = HttpHostHeaderParser.parseHost(tcpHeader.m_Data, dataOffset, tcpDataSize);
@@ -390,7 +351,6 @@ public class LocalVpnService extends VpnService implements Runnable {
                     m_VPNOutputStream.write(ipHeader.m_Data, ipHeader.m_Offset, size);
                     session.BytesSent += tcpDataSize;//注意顺序
                     m_SentBytes += size;
-                    // }
                 }
                 break;
             case IPHeader.UDP:
@@ -441,24 +401,24 @@ public class LocalVpnService extends VpnService implements Runnable {
      */
     private ParcelFileDescriptor establishVPN() throws Exception {
         Builder builder = new Builder();
-        builder.setMtu(ProxyConfig.getInstance().getMTU());
+        builder.setMtu(proxyConfig.getMTU());
         if (IS_DEBUG)
-            LogCat.i("setMtu: " + ProxyConfig.getInstance().getMTU());
+            LogCat.i("setMtu: " + proxyConfig.getMTU());
 
-        IPAddress ipAddress = ProxyConfig.getInstance().getDefaultLocalIP();
+        IPAddress ipAddress = proxyConfig.getDefaultLocalIP();
         LOCAL_IP = CommonMethods.ipStringToInt(ipAddress.Address);
         builder.addAddress(ipAddress.Address, ipAddress.PrefixLength);
         if (IS_DEBUG)
             LogCat.i("setMtu: " + ipAddress.Address + '/' + ipAddress.PrefixLength);
 
-        for (IPAddress dns : ProxyConfig.getInstance().getDnsList()) {
+        for (IPAddress dns : proxyConfig.getDnsList()) {
             builder.addDnsServer(dns.Address);
             if (IS_DEBUG)
                 LogCat.i("addDnsServer: " + dns.Address);
         }
 
-        if (ProxyConfig.getInstance().getRouteList().size() > 0) {
-            for (IPAddress routeAddress : ProxyConfig.getInstance().getRouteList()) {
+        if (proxyConfig.getRouteList().size() > 0) {
+            for (IPAddress routeAddress : proxyConfig.getRouteList()) {
                 builder.addRoute(routeAddress.Address, routeAddress.PrefixLength);
                 if (IS_DEBUG)
                     LogCat.i("addRoute: " + routeAddress.Address + '/' + routeAddress.PrefixLength);
@@ -492,31 +452,55 @@ public class LocalVpnService extends VpnService implements Runnable {
             }
         }
 
+        // TODO AppManager.isLollipopOrAbove
+        // TODO 允许的使用代理的应用
+        List<ProxyApp> proxyApps = proxyManager.getAppManager().getProxyApps();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (AppManager.getInstance().getProxyApps().size() == 0) {
-                writeLog("Proxy All Apps");
+            if (proxyApps.size() == 0) {
+                onStatusChanged(new ProxyState("Proxy none Apps"));
             }
-            for (ProxyApp app : AppManager.getInstance().getProxyApps()) {
-                builder.addAllowedApplication("com.vm.shadowsocks");//需要把自己加入代理，不然会无法进行网络连接
+            builder.addAllowedApplication(getPackageName());// TODO "com.vm.shadowsocks"，需要把自己加入代理，不然会无法进行网络连接
+            builder.addAllowedApplication("com.google.android.gms");
+            builder.addAllowedApplication("com.google.android.gsf");
+            for (ProxyApp app : proxyApps) {
+                if (proxyConfig.isMultipointMode() && EmptyUtil.isBank(app.getProxyUrl())) {
+                    onStatusChanged(new ProxyState("Proxy App(camouflage): " + app.getPackageName()));
+                    continue;
+                }
+
                 try {
                     builder.addAllowedApplication(app.getPackageName());
-                    writeLog("Proxy App: " + app.getPackageName());
+                    onStatusChanged(new ProxyState("Proxy App: " + app.getPackageName()));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    writeLog("Proxy App Fail: " + app.getPackageName());
+                    onStatusChanged(new ProxyState("Proxy App Fail: " + app.getPackageName()));
                 }
             }
+            // onStatusChanged(ProxyManager.PROXY_APPS_ALLOWED, null);
         } else {
-            writeLog("No Pre-App proxy, due to low Android version.");
+            onStatusChanged(new ProxyState("No Pre-App proxy, due to low Android version."));
         }
 
+        // TODO ？？？
 //        Intent intent = new Intent(this, MainActivity.class);
 //        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 //        builder.setConfigureIntent(pendingIntent);
 
-        builder.setSession(ProxyConfig.getInstance().getSessionName());
+        builder.setSession(proxyConfig.getSessionName()); // TODO 更改 VpnService 配置名称
         ParcelFileDescriptor pfdDescriptor = builder.establish();
-        onStatusChanged(ProxyConfig.getInstance().getSessionName() + getString(R.string.vpn_connected_status), true);
+
+        if (proxy_app_add) {
+            proxy_app_add = false;
+            onStatusChanged(ProxyState.STATE_APP_PROXY_ADD);
+        } else if (proxy_app_remove) {
+            proxy_app_remove = false;
+            onStatusChanged(ProxyState.STATE_APP_PROXY_REMOVE);
+        } else {
+            onStatusChanged(ProxyState.STATE_CONNECTED);
+            if (proxyApps.size() > 0)
+                onStatusChanged(ProxyState.STATE_APP_PROXY_ADD);
+        }
+
         return pfdDescriptor;
     }
 
@@ -527,9 +511,26 @@ public class LocalVpnService extends VpnService implements Runnable {
                 m_VPNInterface = null;
             }
         } catch (Exception e) {
-            // ignore
+            LogCat.printStackTrace(e);
         }
-        onStatusChanged(ProxyConfig.getInstance().getSessionName() + getString(R.string.vpn_disconnected_status), false);
+
+        if (proxyManager.getAppManager().getProxyApps().isEmpty()
+                && proxy_app_remove) {
+            proxy_app_remove = false;
+            onStatusChanged(ProxyState.STATE_APP_PROXY_REMOVE);
+        }
+
+        if (!(proxy_app_add | proxy_app_remove)) {
+            onStatusChanged(ProxyState.STATE_DISCONNECTED);
+            proxyManager.getAppManager().clearProxyApps();
+        }
+
+        if (m_VPNOutputStream != null)
+            try {
+                m_VPNOutputStream.close();
+            } catch (IOException e) {
+                LogCat.printStackTrace(e);
+            }
         this.m_VPNOutputStream = null;
     }
 
