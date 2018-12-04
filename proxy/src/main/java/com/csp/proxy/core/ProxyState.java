@@ -31,6 +31,12 @@ public class ProxyState {
         this.running = running;
     }
 
+    private ProxyState(int code, String content, boolean running) {
+        this.code = code;
+        this.content = content;
+        this.running = running;
+    }
+
     public int getCode() {
         return code;
     }
@@ -109,11 +115,11 @@ public class ProxyState {
     public static final int CODE_APP_PROXY_REMOVE = 61;
     public static final int CODE_EXCEPTION = 70;
 
-    public static final ProxyState STATE_DISCONNECTED = new ProxyState(CODE_DISCONNECTED, false); // 代理服务已断开连接
-    public static final ProxyState STATE_INTERRUPT = new ProxyState(CODE_INTERRUPT, false); // 代理服务已中止连接
+    public static final ProxyState STATE_DISCONNECTED = new ProxyState(CODE_DISCONNECTED,"STATE_DISCONNECTED", false); // 代理服务已断开连接
+    public static final ProxyState STATE_INTERRUPT = new ProxyState(CODE_INTERRUPT, "STATE_INTERRUPT",false); // 代理服务已中止连接
     // public static final ProxyState STATE_APPS_ALLOWED = new ProxyState(CODE_APPS_ALLOWED, false); // 被代理的应用已限制，TODO，存在风险
-    public static final ProxyState STATE_CONNECTED = new ProxyState(CODE_CONNECTED, true); // 代理服务已连接
-    public static final ProxyState STATE_APP_PROXY_ADD = new ProxyState(CODE_APP_PROXY_ADD, true); // 被代理应用追加，代理服务仍然连接
-    public static final ProxyState STATE_APP_PROXY_REMOVE = new ProxyState(CODE_APP_PROXY_REMOVE, true); // 被代理应用移除，代理服务仍然连接
-    public static final ProxyState STATE_EXCEPTION = new ProxyState(CODE_EXCEPTION, true); // 发生异常(不停止)，代理服务仍然连接
+    public static final ProxyState STATE_CONNECTED = new ProxyState(CODE_CONNECTED,"STATE_CONNECTED", true); // 代理服务已连接
+    public static final ProxyState STATE_APP_PROXY_ADD = new ProxyState(CODE_APP_PROXY_ADD, "STATE_APP_PROXY_ADD",true); // 被代理应用追加，代理服务仍然连接
+    public static final ProxyState STATE_APP_PROXY_REMOVE = new ProxyState(CODE_APP_PROXY_REMOVE, "STATE_APP_PROXY_REMOVE",true); // 被代理应用移除，代理服务仍然连接
+    public static final ProxyState STATE_EXCEPTION = new ProxyState(CODE_EXCEPTION, "STATE_EXCEPTION",true); // 发生异常(不停止)，代理服务仍然连接
 }
