@@ -1,1 +1,3 @@
-include ':app', ':utillib', ':proxy', ':sample'
+include ':app'
+include ':proxy', ':utillib'
+include ':sample', ':lib-recyclerview-adapter'

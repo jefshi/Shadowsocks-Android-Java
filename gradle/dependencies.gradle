@@ -7,11 +7,12 @@ ext {
 
     sourceCompatibilityVersion = JavaVersion.VERSION_1_8
     targetCompatibilityVersion = JavaVersion.VERSION_1_8
-//    supportLibrariesVersion = '27.1.0'
+
+    supportLibVersion = '28.1.0'
+
 //    kotlin_version = '1.2.41'
 //    anko_version = '0.10.1'
 //    coroutines_version = '0.18'
-
 
 //    dep = [
 //            // test

@@ -31,9 +31,9 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
 
     implementation 'com.journeyapps:zxing-android-embedded:3.5.0'
     implementation 'com.google.zxing:core:3.3.0'
