@@ -4,6 +4,7 @@ import android.util.SparseArray;
 
 import com.csp.proxy.constants.ProxyConstants;
 import com.csp.proxy.core.LocalVpnService;
+import com.csp.proxy.core.ProxyState;
 import com.csp.proxy.core.config.ProxyConfig;
 import com.csp.proxy.tcpip.CommonMethods;
 import com.csp.proxy.tcpip.IPHeader;

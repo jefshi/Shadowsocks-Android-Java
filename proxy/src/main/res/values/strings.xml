@@ -1,6 +1,4 @@
 <resources>
-    <string name="app_name">proxy</string>
-
     <string name="menu_item_toggle_global">Toggle global mode</string>
     <string name="menu_item_switch">Proxy</string>
     <string name="menu_item_about">About</string>
