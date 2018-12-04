@@ -3,8 +3,10 @@ package com.csp.proxy.core;
 import android.content.Context;
 import android.content.Intent;
 
+import com.csp.proxy.constants.ProxyConstants;
 import com.csp.proxy.core.config.ProxyConfig;
 import com.csp.proxy.core.observer.ProxyObserverable;
+import com.csp.utillib.AppUtil;
 import com.csp.utillib.EmptyUtil;
 import com.csp.utillib.LogCat;
 
@@ -207,7 +209,7 @@ class ProxyManagerImpl implements ProxyManager {
 
         app.proxyStopping();
         mAppManager.removeProxyApp(app);
-        boolean existedApp = AppUtils.searchApplication(mContext, app.getPackageName()) != null;
+        boolean existedApp = AppUtil.searchApplication(mContext, app.getPackageName()) != null;
 
         if (existedApp && LocalVpnService.isRunning())
             LocalVpnService.proxy_app_remove = true;
