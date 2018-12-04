@@ -15,7 +15,7 @@ import com.csp.utillib.LogCat;
  */
 @SuppressWarnings("unused")
 public class BoosterServer {
-    private ProxyManager proxyManager;
+    public ProxyManager proxyManager;
 
     private BoosterServer() {
         proxyManager = ProxyServer.getProxyManager(App.getContext());
@@ -92,9 +92,7 @@ public class BoosterServer {
         if (app == null)
             return;
 
-//        TblBooster useBooster = app.getUseBooster();
-//        app.setProxyUrl(useBooster == null ? null : useBooster.getUrl());
-
+        app.setProxyUrl(Constant.URL);
         proxyManager.addProxyApp(app);
     }
 

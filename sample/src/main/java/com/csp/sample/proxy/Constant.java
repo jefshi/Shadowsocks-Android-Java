@@ -5,5 +5,5 @@ package com.csp.sample.proxy;
  */
 
 public interface Constant {
-    String URL = "ss://aes-256-cfb:cylj2018@148.153.44.2:8342";
+    String URL = "ss://aes-256-cfb:cylj2018@146.196.58.106:8346";
 }
