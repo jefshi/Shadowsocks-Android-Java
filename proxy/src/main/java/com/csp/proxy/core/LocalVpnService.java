@@ -3,14 +3,12 @@ package com.csp.proxy.core;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 
 import com.csp.proxy.constants.ProxyConstants;
-import com.csp.proxy.R;
 import com.csp.proxy.core.config.IPAddress;
 import com.csp.proxy.core.config.ProxyConfig;
 import com.csp.proxy.dns.DnsPacket;
@@ -24,6 +22,7 @@ import com.csp.proxy.tcpip.TCPHeader;
 import com.csp.proxy.tcpip.TcpProxyServer;
 import com.csp.proxy.tcpip.UDPHeader;
 import com.csp.utillib.AppInfoUtils;
+import com.csp.utillib.EmptyUtil;
 import com.csp.utillib.LogCat;
 
 import java.io.FileInputStream;
@@ -32,11 +31,10 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class LocalVpnService extends VpnService implements Runnable {
+public class LocalVpnService extends VpnService {
     private final static boolean IS_DEBUG = ProxyConstants.LOG_DEBUG;
     public static LocalVpnService Instance;
     private static String proxyUrl; // 代理配置
@@ -56,9 +54,6 @@ public class LocalVpnService extends VpnService implements Runnable {
     public static boolean proxy_app_add = false;
     public static boolean proxy_app_remove = false;
 
-    public static ProxyState sProxyState;
-
-
     // TODO IP 数据报处理
     private byte[] m_Packet; // TODO 读取的 IP 数据报存放地
     private IPHeader m_IPHeader;
@@ -74,6 +69,7 @@ public class LocalVpnService extends VpnService implements Runnable {
     private long m_ReceivedBytes;
     // TODO 未阅读 End
 
+    public static ProxyState sProxyState;
     private ProxyManagerImpl proxyManager;
 
     public static boolean isRunning() {
@@ -93,6 +89,8 @@ public class LocalVpnService extends VpnService implements Runnable {
     }
 
     public LocalVpnService() {
+        // TODO 没有 super();？
+
         m_Handler = new Handler();
         m_Packet = new byte[20000]; // 长度定义
         m_IPHeader = new IPHeader(m_Packet, 0);
@@ -112,7 +110,7 @@ public class LocalVpnService extends VpnService implements Runnable {
     @Override
     public void onCreate() {
         // Start a new session by creating a new thread.
-        m_VPNThread = new Thread(this, "VPNServiceThread");
+        m_VPNThread = new Thread(new TaskRun(), "VPNServiceThread");
         m_VPNThread.start();
         super.onCreate();
     }
@@ -176,88 +174,8 @@ public class LocalVpnService extends VpnService implements Runnable {
     }
 
     private String getVersionName() {
-        String versionName = AppInfoUtils.getVersionName();
+        String versionName = AppInfoUtils.getVersionName(this);
         return versionName == null ? "0.0" : versionName;
-    }
-
-    @Override
-    public synchronized void run() {
-        try {
-            onStatusChanged(new ProxyState("VPNService work thread is runing..."));
-
-            ProxyConfig.AppInstallID = getAppInstallID(); // TODO 获取安装ID，移动到 ProxyConfig 自身中
-            ProxyConfig.AppVersion = getVersionName(); // TODO 获取版本号，移动到 ProxyConfig 自身中
-            System.out.printf("AppInstallID: %s\n", ProxyConfig.AppInstallID); // TODO 作用未知
-            onStatusChanged(new ProxyState("Android version: %s", Build.VERSION.RELEASE));
-            onStatusChanged(new ProxyState("App version: %s", ProxyConfig.AppVersion));
-
-            ChinaIpMaskManager.loadFromFile(this);
-            waitUntilPreapred(); // TODO VpnService#prepare()
-
-            onStatusChanged(new ProxyState("Load config from file ..."));
-            try {
-                proxyConfig.loadFromFile(this);
-                onStatusChanged(new ProxyState("Load done"));
-            } catch (Exception e) {
-                String errString = e.getMessage();
-                if (errString == null || errString.isEmpty()) {
-                    errString = e.toString();
-                }
-                onStatusChanged(new ProxyState("Load failed with error: %s", errString));
-            }
-
-            // TODO 本地 Sock5 代理服务器启动
-            m_TcpProxyServer = new TcpProxyServer(0);
-            m_TcpProxyServer.start();
-            onStatusChanged(new ProxyState("LocalTcpServer started."));
-
-            // TODO ？？？
-            m_DnsProxy = new DnsProxy();
-            m_DnsProxy.start();
-            onStatusChanged(new ProxyState("LocalDnsProxy started."));
-
-            // TODO 不进行 prepare() ？？？ 貌似不是，监听，并读写虚拟网卡 IP 数据包
-            while (true) {
-                if (running) {
-                    //加载配置文件
-
-                    onStatusChanged(new ProxyState("set shadowsocks/(http proxy)"));
-                    try {
-                        proxyConfig.m_ProxyList.clear();
-                        proxyConfig.addProxyToList(proxyUrl); // TODO 调整位置
-                        onStatusChanged(new ProxyState("Proxy is: %s", proxyConfig.getDefaultProxy().toString()));
-                    } catch (Exception e) {
-                        String errString = e.getMessage();
-                        if (errString == null || errString.isEmpty()) {
-                            errString = e.toString();
-                        }
-                        running = false;
-                        ProxyState.STATE_EXCEPTION.setException(e);
-                        onStatusChanged(ProxyState.STATE_EXCEPTION);
-                        LogCat.printStackTrace(e);
-                        continue;
-                    }
-
-                    String welcomeInfoString = proxyConfig.getWelcomeInfo();
-                    if (welcomeInfoString != null && !welcomeInfoString.isEmpty()) {
-                        onStatusChanged(new ProxyState("%s", proxyConfig.getWelcomeInfo()));
-                    }
-                    onStatusChanged(new ProxyState("Global mode is " + (proxyConfig.isGlobalMode() ? "on" : "off")));
-
-                    runVPN();
-                } else {
-                    Thread.sleep(100);
-                }
-            }
-        } catch (Exception e) {
-            LogCat.printStackTrace(e);
-            onStatusChanged(new ProxyState("Fatal error: %s", e.toString()));
-        } finally {
-            onStatusChanged(new ProxyState("App terminated."));
-            dispose();
-        }
-
-        LogCat.e("VPNService.run() end");
     }
 
     /**
@@ -565,4 +483,88 @@ public class LocalVpnService extends VpnService implements Runnable {
         System.exit(0);
     }
 
+    public class TaskRun implements Runnable {
+
+        @Override
+        public synchronized void run() {
+            try {
+                Context context = LocalVpnService.this;
+
+                onStatusChanged(new ProxyState("VPNService work thread is runing..."));
+
+                ProxyConfig.AppInstallID = getAppInstallID(); // TODO 获取安装ID，移动到 ProxyConfig 自身中
+                ProxyConfig.AppVersion = getVersionName(); // TODO 获取版本号，移动到 ProxyConfig 自身中
+                System.out.printf("AppInstallID: %s\n", ProxyConfig.AppInstallID); // TODO 作用未知
+                onStatusChanged(new ProxyState("Android version: %s", Build.VERSION.RELEASE));
+                onStatusChanged(new ProxyState("App version: %s", ProxyConfig.AppVersion));
+
+                ChinaIpMaskManager.loadFromFile(context);
+                waitUntilPreapred(); // TODO VpnService#prepare()
+
+                onStatusChanged(new ProxyState("Load config from file ..."));
+                try {
+                    proxyConfig.loadFromFile(context);
+                    onStatusChanged(new ProxyState("Load done"));
+                } catch (Exception e) {
+                    String errString = e.getMessage();
+                    if (errString == null || errString.isEmpty()) {
+                        errString = e.toString();
+                    }
+                    onStatusChanged(new ProxyState("Load failed with error: %s", errString));
+                }
+
+                // TODO 本地 Sock5 代理服务器启动
+                m_TcpProxyServer = new TcpProxyServer(0);
+                m_TcpProxyServer.start();
+                onStatusChanged(new ProxyState("LocalTcpServer started."));
+
+                // TODO ？？？
+                m_DnsProxy = new DnsProxy();
+                m_DnsProxy.start();
+                onStatusChanged(new ProxyState("LocalDnsProxy started."));
+
+                // TODO 不进行 prepare() ？？？ 貌似不是，监听，并读写虚拟网卡 IP 数据包
+                while (true) {
+                    if (running) {
+                        //加载配置文件
+
+                        onStatusChanged(new ProxyState("set shadowsocks/(http proxy)"));
+                        try {
+                            proxyConfig.m_ProxyList.clear();
+                            proxyConfig.addProxyToList(proxyUrl); // TODO 调整位置
+                            onStatusChanged(new ProxyState("Proxy is: %s", proxyConfig.getDefaultProxy().toString()));
+                        } catch (Exception e) {
+                            String errString = e.getMessage();
+                            if (errString == null || errString.isEmpty()) {
+                                errString = e.toString();
+                            }
+                            running = false;
+                            ProxyState.STATE_EXCEPTION.setException(e);
+                            onStatusChanged(ProxyState.STATE_EXCEPTION);
+                            LogCat.printStackTrace(e);
+                            continue;
+                        }
+
+                        String welcomeInfoString = proxyConfig.getWelcomeInfo();
+                        if (welcomeInfoString != null && !welcomeInfoString.isEmpty()) {
+                            onStatusChanged(new ProxyState("%s", proxyConfig.getWelcomeInfo()));
+                        }
+                        onStatusChanged(new ProxyState("Global mode is " + (proxyConfig.isGlobalMode() ? "on" : "off")));
+
+                        runVPN();
+                    } else {
+                        Thread.sleep(100);
+                    }
+                }
+            } catch (Exception e) {
+                LogCat.printStackTrace(e);
+                onStatusChanged(new ProxyState("Fatal error: %s", e.toString()));
+            } finally {
+                onStatusChanged(new ProxyState("App terminated."));
+                dispose();
+            }
+
+            LogCat.e("VPNService.run() end");
+        }
+    }
 }
